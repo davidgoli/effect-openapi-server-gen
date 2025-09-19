@@ -485,31 +485,31 @@ describe("Integration Tests - Pet Store API", () => {
 
       // Test GET /pets
       const listPetsEndpoint = await Effect.runPromise(
-        generateHttpApiEndpoint("/pets", "get", petStoreSpec.paths["/pets"]!.get!)
+        generateHttpApiEndpoint("/pets", "get", petStoreSpec.paths?.["/pets"]?.get!)
       )
       endpoints.push(listPetsEndpoint)
 
       // Test POST /pets
       const createPetEndpoint = await Effect.runPromise(
-        generateHttpApiEndpoint("/pets", "post", petStoreSpec.paths["/pets"]!.post!)
+        generateHttpApiEndpoint("/pets", "post", petStoreSpec.paths?.["/pets"]?.post!)
       )
       endpoints.push(createPetEndpoint)
 
       // Test GET /pets/{petId}
       const getPetEndpoint = await Effect.runPromise(
-        generateHttpApiEndpoint("/pets/{petId}", "get", petStoreSpec.paths["/pets/{petId}"]!.get!)
+        generateHttpApiEndpoint("/pets/{petId}", "get", petStoreSpec.paths?.["/pets/{petId}"]?.get!)
       )
       endpoints.push(getPetEndpoint)
 
       // Test PUT /pets/{petId}
       const updatePetEndpoint = await Effect.runPromise(
-        generateHttpApiEndpoint("/pets/{petId}", "put", petStoreSpec.paths["/pets/{petId}"]!.put!)
+        generateHttpApiEndpoint("/pets/{petId}", "put", petStoreSpec.paths?.["/pets/{petId}"]?.put!)
       )
       endpoints.push(updatePetEndpoint)
 
       // Test DELETE /pets/{petId}
       const deletePetEndpoint = await Effect.runPromise(
-        generateHttpApiEndpoint("/pets/{petId}", "delete", petStoreSpec.paths["/pets/{petId}"]!.delete!)
+        generateHttpApiEndpoint("/pets/{petId}", "delete", petStoreSpec.paths?.["/pets/{petId}"]?.delete!)
       )
       endpoints.push(deletePetEndpoint)
 
@@ -552,9 +552,9 @@ describe("Integration Tests - Pet Store API", () => {
     })
 
     it("should create request validators for complex operations", async () => {
-      const createPetOperation = petStoreSpec.paths["/pets"]!.post!
-      const listPetsOperation = petStoreSpec.paths["/pets"]!.get!
-      const getPetOperation = petStoreSpec.paths["/pets/{petId}"]!.get!
+      const createPetOperation = petStoreSpec.paths?.["/pets"]?.post!
+      const listPetsOperation = petStoreSpec.paths?.["/pets"]?.get!
+      const getPetOperation = petStoreSpec.paths?.["/pets/{petId}"]?.get!
 
       const createPetValidator = await Effect.runPromise(createRequestValidator(createPetOperation))
       const listPetsValidator = await Effect.runPromise(createRequestValidator(listPetsOperation))
@@ -596,8 +596,8 @@ describe("Integration Tests - Pet Store API", () => {
     })
 
     it("should create response validators for different status codes", async () => {
-      const listPetsOperation = petStoreSpec.paths["/pets"]!.get!
-      const getPetOperation = petStoreSpec.paths["/pets/{petId}"]!.get!
+      const listPetsOperation = petStoreSpec.paths?.["/pets"]?.get!
+      const getPetOperation = petStoreSpec.paths?.["/pets/{petId}"]?.get!
 
       const listPetsValidator = await Effect.runPromise(createResponseValidator(listPetsOperation.responses))
       const getPetValidator = await Effect.runPromise(createResponseValidator(getPetOperation.responses))
