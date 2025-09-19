@@ -3,6 +3,7 @@ import type { OpenAPIV3_1 } from "openapi-types"
 import type { ParsedOpenAPISpec } from "./types.js"
 import { generateSchemaCode } from "./schema-utils.js"
 import { createEndpointGenerationError } from "./error-utils.js"
+import { toPascalCase, toCamelCase } from "./string-utils.js"
 
 export type EndpointGenerationError = ReturnType<typeof createEndpointGenerationError>
 
@@ -74,19 +75,6 @@ const generateRequestBodySchema = (requestBody?: OpenAPIV3_1.RequestBodyObject |
   return `HttpApiSchema.content('application/json', ${schemaCode})`
 }
 
-const capitalizeFirst = (str: string): string =>
-  str.charAt(0).toUpperCase() + str.slice(1)
-
-const toPascalCase = (str: string): string => {
-  const cleaned = str.replace(/\s+API$/i, "").replace(/API\s*/gi, "")
-  return cleaned.split(/[-_\s]+/).map(capitalizeFirst).join("") + "Api"
-}
-
-const toCamelCase = (str: string): string => {
-  const cleaned = str.replace(/\s+API$/i, "").replace(/API\s*/gi, "")
-  const pascal = cleaned.split(/[-_\s]+/).map(capitalizeFirst).join("")
-  return pascal.charAt(0).toLowerCase() + pascal.slice(1)
-}
 
 export const generateHttpApiEndpoint = (
   path: string,
