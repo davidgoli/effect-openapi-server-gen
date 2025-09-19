@@ -1,0 +1,2 @@
+- in this repo, always run "pnpm" instead of "npm"
+- never wait more than 10 seconds for tests to pass or fail

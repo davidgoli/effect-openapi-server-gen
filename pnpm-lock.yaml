@@ -17,6 +17,9 @@ importers:
       '@effect/platform-node':
         specifier: ^0.96.1
         version: 0.96.1(@effect/cluster@0.48.14(@effect/platform@0.90.10(effect@3.17.13))(@effect/rpc@0.69.4(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.9.5(@effect/platform@0.90.10(effect@3.17.13))(@effect/rpc@0.69.4(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.10(effect@3.17.13))(@effect/rpc@0.69.4(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(effect@3.17.13)
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.17.13)
       effect:
         specifier: ^3.17.13
         version: 3.17.13
@@ -145,6 +148,12 @@ packages:
     peerDependencies:
       '@effect/platform': ^0.90.10
       effect: ^3.17.13
+
+  '@effect/schema@0.75.5':
+    resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
+    deprecated: this package has been merged into the main effect package
+    peerDependencies:
+      effect: ^3.9.2
 
   '@effect/sql@0.44.2':
     resolution: {integrity: sha512-DEcvriHvj88zu7keruH9NcHQzam7yQzLNLJO6ucDXMCAwWzYZSJOsmkxBznRFv8ylFtccSclKH2fuj+wRKPjCQ==}
@@ -1842,6 +1851,11 @@ snapshots:
     dependencies:
       '@effect/platform': 0.90.10(effect@3.17.13)
       effect: 3.17.13
+
+  '@effect/schema@0.75.5(effect@3.17.13)':
+    dependencies:
+      effect: 3.17.13
+      fast-check: 3.23.2
 
   '@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.10(effect@3.17.13))(effect@3.17.13)':
     dependencies:
