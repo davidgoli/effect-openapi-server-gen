@@ -1,34 +1,36 @@
 import { Effect } from "effect"
 import type { OpenAPIV3_1 } from "openapi-types"
 import type { ParsedOpenAPISpec } from "./types.js"
-
 import { createOpenAPIParseError } from "./error-utils.js"
+import { isRecord, getProperty } from "./type-utils.js"
 
 export type OpenAPIParseError = ReturnType<typeof createOpenAPIParseError>
 
 const isValidOpenAPISpec = (spec: unknown): spec is OpenAPIV3_1.Document => {
-  if (typeof spec !== "object" || spec === null) {
+  if (!isRecord(spec)) {
     return false
   }
 
-  const obj = spec as Record<string, unknown>
-
-  // Check required fields
-  if (typeof obj.openapi !== "string" || !obj.openapi.startsWith("3.1")) {
+  // Check required fields using type-safe utilities
+  const openapi = getProperty(spec, "openapi", (v): v is string => typeof v === "string")
+  if (!openapi || !openapi.startsWith("3.1")) {
     return false
   }
 
-  if (typeof obj.info !== "object" || obj.info === null) {
+  const info = getProperty(spec, "info", isRecord)
+  if (!info) {
     return false
   }
 
-  const info = obj.info as Record<string, unknown>
-  if (typeof info.title !== "string" || typeof info.version !== "string") {
+  const title = getProperty(info, "title", (v): v is string => typeof v === "string")
+  const version = getProperty(info, "version", (v): v is string => typeof v === "string")
+  if (!title || !version) {
     return false
   }
 
   // paths is required but can be empty
-  if (typeof obj.paths !== "object" || obj.paths === null) {
+  const paths = getProperty(spec, "paths", isRecord)
+  if (!paths) {
     return false
   }
 

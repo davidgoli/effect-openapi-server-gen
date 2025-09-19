@@ -11,8 +11,8 @@ export interface ValidatedRequest {
 }
 
 export interface ValidatedResponse {
-  status: number
-  body?: unknown
+  readonly status: number
+  readonly body?: unknown
 }
 
 export interface RequestValidationSchemas {
