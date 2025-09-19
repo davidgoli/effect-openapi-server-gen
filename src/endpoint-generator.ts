@@ -59,6 +59,8 @@ const generateParametersSchema = (parameters: (OpenAPIV3_1.ParameterObject | Ope
 
     const typedParam = param
     const schema = typedParam.schema
+    if (!schema) return // Skip parameters without schema
+
     const schemaCode = generateSchemaCode(schema)
     const isOptional = !typedParam.required
 
