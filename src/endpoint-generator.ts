@@ -2,12 +2,9 @@ import { Effect } from "effect"
 import type { OpenAPIV3_1 } from "openapi-types"
 import type { ParsedOpenAPISpec } from "./types.js"
 import { generateSchemaCode } from "./schema-utils.js"
+import { createEndpointGenerationError } from "./error-utils.js"
 
-export interface EndpointGenerationError {
-  readonly _tag: "EndpointGenerationError"
-  readonly message: string
-  readonly cause?: unknown
-}
+export type EndpointGenerationError = ReturnType<typeof createEndpointGenerationError>
 
 const generateParametersSchema = (parameters: (OpenAPIV3_1.ParameterObject | OpenAPIV3_1.ReferenceObject)[]): { path: string; query: string } => {
   const pathParams: string[] = []

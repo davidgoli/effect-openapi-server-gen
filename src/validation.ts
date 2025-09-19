@@ -1,11 +1,8 @@
 import { Effect, pipe, Schema } from "effect"
 import type { OpenAPIV3_1 } from "openapi-types"
+import { createValidationError } from "./error-utils.js"
 
-export interface ValidationError {
-  readonly _tag: "ValidationError"
-  readonly message: string
-  readonly cause?: unknown
-}
+export type ValidationError = ReturnType<typeof createValidationError>
 
 export interface ValidatedRequest {
   pathParams?: unknown
@@ -108,11 +105,9 @@ export const validateRequest = (
     if (schemas.path) {
       const pathResult = yield* pipe(
         Effect.try(() => Schema.decodeSync(schemas.path!)(request.params)),
-        Effect.mapError((cause) => ({
-          _tag: "ValidationError" as const,
-          message: `Path parameter validation failed`,
-          cause
-        }))
+        Effect.mapError((cause) =>
+          createValidationError("Path parameter validation failed", cause)
+        )
       )
       result.pathParams = pathResult
     }
@@ -121,11 +116,9 @@ export const validateRequest = (
       const parsedQuery = parseQueryParameters(request.query as Record<string, string | string[]>)
       const queryResult = yield* pipe(
         Effect.try(() => Schema.decodeSync(schemas.query!)(parsedQuery)),
-        Effect.mapError((cause) => ({
-          _tag: "ValidationError" as const,
-          message: `Query parameter validation failed`,
-          cause
-        }))
+        Effect.mapError((cause) =>
+          createValidationError("Query parameter validation failed", cause)
+        )
       )
       result.queryParams = queryResult
     }
@@ -133,11 +126,9 @@ export const validateRequest = (
     if (schemas.body && request.body !== undefined) {
       const bodyResult = yield* pipe(
         Effect.try(() => Schema.decodeSync(schemas.body!)(request.body)),
-        Effect.mapError((cause) => ({
-          _tag: "ValidationError" as const,
-          message: `Request body validation failed`,
-          cause
-        }))
+        Effect.mapError((cause) =>
+          createValidationError("Request body validation failed", cause)
+        )
       )
       result.body = bodyResult
     }
@@ -153,20 +144,17 @@ export const validateResponse = (
     const schema = schemas[response.status]
 
     if (!schema) {
-      return yield* Effect.fail({
-        _tag: "ValidationError" as const,
-        message: `No validation schema found for status ${response.status}`
-      })
+      return yield* Effect.fail(
+        createValidationError(`No validation schema found for status ${response.status}`)
+      )
     }
 
     if (response.body !== undefined) {
       const validatedBody = yield* pipe(
         Effect.try(() => Schema.decodeSync(schema)(response.body)),
-        Effect.mapError((cause) => ({
-          _tag: "ValidationError" as const,
-          message: `Response body validation failed for status ${response.status}`,
-          cause
-        }))
+        Effect.mapError((cause) =>
+          createValidationError(`Response body validation failed for status ${response.status}`, cause)
+        )
       )
 
       return {

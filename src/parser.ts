@@ -2,11 +2,9 @@ import { Effect } from "effect"
 import type { OpenAPIV3_1 } from "openapi-types"
 import type { ParsedOpenAPISpec } from "./types.js"
 
-export interface OpenAPIParseError {
-  readonly _tag: "OpenAPIParseError"
-  readonly message: string
-  readonly cause?: unknown
-}
+import { createOpenAPIParseError } from "./error-utils.js"
+
+export type OpenAPIParseError = ReturnType<typeof createOpenAPIParseError>
 
 const isValidOpenAPISpec = (spec: unknown): spec is OpenAPIV3_1.Document => {
   if (typeof spec !== "object" || spec === null) {
@@ -50,18 +48,15 @@ export const parseOpenAPI = (
         spec = input
       }
     } catch (error) {
-      return yield* Effect.fail({
-        _tag: "OpenAPIParseError" as const,
-        message: "Failed to parse JSON input",
-        cause: error
-      })
+      return yield* Effect.fail(
+        createOpenAPIParseError("Failed to parse JSON input", error)
+      )
     }
 
     if (!isValidOpenAPISpec(spec)) {
-      return yield* Effect.fail({
-        _tag: "OpenAPIParseError" as const,
-        message: "Invalid OpenAPI 3.1 specification"
-      })
+      return yield* Effect.fail(
+        createOpenAPIParseError("Invalid OpenAPI 3.1 specification")
+      )
     }
 
     return {

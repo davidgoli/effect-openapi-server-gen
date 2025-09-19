@@ -1,12 +1,9 @@
 import { Effect } from "effect"
 import type { OpenAPIV3_1 } from "openapi-types"
 import { generateSchemaCode } from "./schema-utils.js"
+import { createSchemaGenerationError } from "./error-utils.js"
 
-export interface SchemaGenerationError {
-  readonly _tag: "SchemaGenerationError"
-  readonly message: string
-  readonly cause?: unknown
-}
+export type SchemaGenerationError = ReturnType<typeof createSchemaGenerationError>
 
 export const generateEffectSchema = (
   schema: OpenAPIV3_1.SchemaObject,

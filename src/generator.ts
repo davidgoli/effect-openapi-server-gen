@@ -1,17 +1,13 @@
 import { Effect } from "effect"
 import type { GeneratedCode, GenerationOptions, ParsedOpenAPISpec } from "./types.js"
+import { createCodeGenerationError } from "./error-utils.js"
 
-export interface CodeGenerationError {
-  readonly _tag: "CodeGenerationError"
-  readonly message: string
-  readonly cause?: unknown
-}
+export type CodeGenerationError = ReturnType<typeof createCodeGenerationError>
 
 export const generateCode = (
   _spec: ParsedOpenAPISpec,
   _options: GenerationOptions
 ): Effect.Effect<GeneratedCode, CodeGenerationError> =>
-  Effect.fail({
-    _tag: "CodeGenerationError" as const,
-    message: "Not implemented yet"
-  })
+  Effect.fail(
+    createCodeGenerationError("Not implemented yet")
+  )
