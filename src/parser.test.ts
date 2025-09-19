@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { Effect } from "effect"
+import type { OpenAPIV3_1 } from "openapi-types"
 import { parseOpenAPI } from "./parser.js"
 
 describe("OpenAPI Parser", () => {
@@ -75,7 +76,8 @@ describe("OpenAPI Parser", () => {
     expect(result.info.title).toBe("Pet Store API")
     expect(result.paths["/pets"]).toBeDefined()
     expect(result.components?.schemas?.Pet).toBeDefined()
-    expect(result.components?.schemas?.Pet?.properties?.name?.type).toBe("string")
+    const petSchema = result.components?.schemas?.Pet as OpenAPIV3_1.SchemaObject
+    expect((petSchema?.properties?.name as OpenAPIV3_1.SchemaObject)?.type).toBe("string")
   })
 
   it("should fail gracefully with invalid OpenAPI spec", async () => {
