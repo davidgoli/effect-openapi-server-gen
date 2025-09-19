@@ -1,53 +1,12 @@
 import { Effect } from "effect"
 import type { OpenAPIV3_1 } from "openapi-types"
 import type { ParsedOpenAPISpec } from "./types.js"
+import { generateSchemaCode } from "./schema-utils.js"
 
 export interface EndpointGenerationError {
   readonly _tag: "EndpointGenerationError"
   readonly message: string
   readonly cause?: unknown
-}
-
-const generateSchemaCode = (schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject): string => {
-  if ("$ref" in schema) {
-    const refName = schema.$ref.split("/").pop()
-    return refName || "Schema.Unknown"
-  }
-
-  const typedSchema = schema
-
-  if (typedSchema.enum) {
-    const enumValues = typedSchema.enum.map(value => `"${value}"`).join(", ")
-    return `Schema.Literal(${enumValues})`
-  }
-
-  switch (typedSchema.type) {
-    case "string":
-      return "Schema.String"
-    case "integer":
-    case "number":
-      return "Schema.Number"
-    case "boolean":
-      return "Schema.Boolean"
-    case "array":
-      if (typedSchema.items) {
-        const itemsCode = generateSchemaCode(typedSchema.items)
-        return `Schema.Array(${itemsCode})`
-      }
-      return "Schema.Array(Schema.Unknown)"
-    case "object":
-      if (typedSchema.properties) {
-        const properties = Object.entries(typedSchema.properties).map(([key, propSchema]) => {
-          const isRequired = typedSchema.required?.includes(key) ?? false
-          const propCode = generateSchemaCode(propSchema)
-          return `  ${key}: ${isRequired ? propCode : `Schema.optional(${propCode})`}`
-        }).join(",\n")
-        return `Schema.Struct({\n${properties}\n})`
-      }
-      return "Schema.Record({ key: Schema.String, value: Schema.Unknown })"
-    default:
-      return "Schema.Unknown"
-  }
 }
 
 const generateParametersSchema = (parameters: (OpenAPIV3_1.ParameterObject | OpenAPIV3_1.ReferenceObject)[]): { path: string; query: string } => {
@@ -61,13 +20,14 @@ const generateParametersSchema = (parameters: (OpenAPIV3_1.ParameterObject | Ope
     const schema = typedParam.schema
     if (!schema) return // Skip parameters without schema
 
-    const schemaCode = generateSchemaCode(schema)
+    const schemaCode = generateSchemaCode(schema, { forEndpoint: true })
     const isOptional = !typedParam.required
 
     if (typedParam.in === "path") {
       pathParams.push(`  ${typedParam.name}: ${schemaCode}`)
     } else if (typedParam.in === "query") {
-      queryParams.push(`  ${typedParam.name}: ${isOptional ? `Schema.optional(${schemaCode})` : schemaCode}`)
+      const finalCode = isOptional ? generateSchemaCode(schema, { forEndpoint: true, isOptional: true }) : schemaCode
+      queryParams.push(`  ${typedParam.name}: ${finalCode}`)
     }
   })
 
@@ -94,7 +54,7 @@ const generateResponseSchema = (responses: OpenAPIV3_1.ResponsesObject): string 
     return ""
   }
 
-  const schemaCode = generateSchemaCode(schema)
+  const schemaCode = generateSchemaCode(schema, { forEndpoint: true })
   return `HttpApiSchema.content('application/json', ${schemaCode})`
 }
 
@@ -113,7 +73,7 @@ const generateRequestBodySchema = (requestBody?: OpenAPIV3_1.RequestBodyObject |
     return ""
   }
 
-  const schemaCode = generateSchemaCode(schema)
+  const schemaCode = generateSchemaCode(schema, { forEndpoint: true })
   return `HttpApiSchema.content('application/json', ${schemaCode})`
 }
 

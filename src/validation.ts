@@ -118,7 +118,7 @@ export const validateRequest = (
     }
 
     if (schemas.query) {
-      const parsedQuery = parseQueryParameters(request.query)
+      const parsedQuery = parseQueryParameters(request.query as Record<string, string | string[]>)
       const queryResult = yield* pipe(
         Effect.try(() => Schema.decodeSync(schemas.query!)(parsedQuery)),
         Effect.mapError((cause) => ({
