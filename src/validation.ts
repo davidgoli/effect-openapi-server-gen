@@ -38,9 +38,9 @@ const generateSchemaFromOpenAPI = (schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_
   if (typedSchema.enum) {
     const enumValues = typedSchema.enum
     if (enumValues.length === 1) {
-      return Schema.Literal(enumValues[0] as any)
+      return Schema.Literal(enumValues[0] as string | number | boolean)
     }
-    return Schema.Union(...enumValues.map(val => Schema.Literal(val as any)))
+    return Schema.Union(...enumValues.map(val => Schema.Literal(val as string | number | boolean)))
   }
 
   switch (typedSchema.type) {
@@ -78,8 +78,8 @@ const generateSchemaFromOpenAPI = (schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_
   }
 }
 
-const parseQueryParameters = (query: Record<string, string | string[]>): Record<string, any> => {
-  const parsed: Record<string, any> = {}
+const parseQueryParameters = (query: Record<string, string | string[]>): Record<string, unknown> => {
+  const parsed: Record<string, unknown> = {}
 
   Object.entries(query).forEach(([key, value]) => {
     if (Array.isArray(value)) {
@@ -99,7 +99,7 @@ const parseQueryParameters = (query: Record<string, string | string[]>): Record<
 }
 
 export const validateRequest = (
-  request: { params: Record<string, any>; query: Record<string, any>; body?: any },
+  request: { params: Record<string, unknown>; query: Record<string, unknown>; body?: unknown },
   schemas: RequestValidationSchemas
 ): Effect.Effect<ValidatedRequest, ValidationError> =>
   Effect.gen(function* () {
@@ -146,7 +146,7 @@ export const validateRequest = (
   })
 
 export const validateResponse = (
-  response: { status: number; body?: any },
+  response: { status: number; body?: unknown },
   schemas: ResponseValidationSchemas
 ): Effect.Effect<ValidatedResponse, ValidationError> =>
   Effect.gen(function* () {
@@ -184,15 +184,15 @@ export const validateResponse = (
 export const createRequestValidator = (
   operation: OpenAPIV3_1.OperationObject
 ): Effect.Effect<
-  (request: { params: Record<string, any>; query: Record<string, any>; body?: any }) => Effect.Effect<ValidatedRequest, ValidationError>,
+  (request: { params: Record<string, unknown>; query: Record<string, unknown>; body?: unknown }) => Effect.Effect<ValidatedRequest, ValidationError>,
   ValidationError
 > =>
   Effect.gen(function* () {
     const schemas: RequestValidationSchemas = {}
 
     if (operation.parameters) {
-      const pathParams: Record<string, any> = {}
-      const queryParams: Record<string, any> = {}
+      const pathParams: any = {}
+      const queryParams: any = {}
 
       operation.parameters.forEach(param => {
         if ("$ref" in param) return
@@ -229,14 +229,14 @@ export const createRequestValidator = (
       }
     }
 
-    return (request: { params: Record<string, any>; query: Record<string, any>; body?: any }) =>
+    return (request: { params: Record<string, unknown>; query: Record<string, unknown>; body?: unknown }) =>
       validateRequest(request, schemas)
   })
 
 export const createResponseValidator = (
   responses: OpenAPIV3_1.ResponsesObject
 ): Effect.Effect<
-  (response: { status: number; body?: any }) => Effect.Effect<ValidatedResponse, ValidationError>,
+  (response: { status: number; body?: unknown }) => Effect.Effect<ValidatedResponse, ValidationError>,
   ValidationError
 > =>
   Effect.gen(function* () {
@@ -252,6 +252,6 @@ export const createResponseValidator = (
       }
     })
 
-    return (response: { status: number; body?: any }) =>
+    return (response: { status: number; body?: unknown }) =>
       validateResponse(response, schemas)
   })
