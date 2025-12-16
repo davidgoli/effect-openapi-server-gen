@@ -314,6 +314,8 @@ This project was built with Test-Driven Development. When contributing:
 2. Implement the feature
 3. Ensure all tests pass
 4. Run linter: `pnpm lint-fix`
+5. Run `pnpm codegen` to regenerate `src/index.ts` if you added new modules
+6. Run `pnpm format` to format all files with Prettier
 
 ## Known Limitations
 
