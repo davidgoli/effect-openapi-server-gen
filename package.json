@@ -1,5 +1,5 @@
 {
-  "name": "@davigoli/openapi-server-gen",
+  "name": "@davidgoli/openapi-server-gen",
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@9.15.0",

@@ -12,7 +12,7 @@ describe('CodeEmitter', () => {
 
         expect(result).toContain('/**')
         expect(result).toContain('* Generated')
-        expect(result).toContain('@davigoli/openapi-server-gen')
+        expect(result).toContain('@davidgoli/openapi-server-gen')
         expect(result).toContain('DO NOT EDIT')
       }))
 

@@ -1,4 +1,4 @@
-# @davigoli/openapi-server-gen
+# @davidgoli/openapi-server-gen
 
 Generate type-safe [Effect](https://effect.website) HttpServer implementations from OpenAPI 3.1 specifications.
 
@@ -25,13 +25,13 @@ You can use the generator without installing via `npx`, or install it globally/l
 
 ```bash
 # Use directly with npx (recommended)
-npx @davigoli/openapi-server-gen ./api-spec.yaml ./generated/api.ts
+npx @davidgoli/openapi-server-gen ./api-spec.yaml ./generated/api.ts
 
 # Or install globally
-pnpm add -g @davigoli/openapi-server-gen
+pnpm add -g @davidgoli/openapi-server-gen
 
 # Or add to project
-pnpm add -D @davigoli/openapi-server-gen
+pnpm add -D @davidgoli/openapi-server-gen
 ```
 
 ## Quick Start
@@ -42,7 +42,7 @@ Run the generator with your OpenAPI spec:
 
 ```bash
 # Using npx (no installation needed)
-npx @davigoli/openapi-server-gen ./api-spec.yaml ./generated/api.ts
+npx @davidgoli/openapi-server-gen ./api-spec.yaml ./generated/api.ts
 
 # Or if installed globally
 openapi-server-gen ./api-spec.yaml ./generated/api.ts
