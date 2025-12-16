@@ -3,11 +3,17 @@
  *
  * This shows how to implement handlers for the generated API.
  */
-import { Effect, Layer, Ref, Schema } from 'effect'
+import { Effect, Layer, Ref } from 'effect'
+import type { Schema } from 'effect'
 import { HttpApiBuilder } from '@effect/platform'
 import { NodeHttpServer, NodeRuntime } from '@effect/platform-node'
 import * as Http from 'node:http'
-import { TodoAPI, TodoSchema, CreateTodoRequestSchema, UpdateTodoRequestSchema } from './generated-api.js'
+import {
+  TodoAPI,
+  type TodoSchema,
+  type CreateTodoRequestSchema,
+  type UpdateTodoRequestSchema
+} from './generated-api.js'
 
 /**
  * Derive types from schemas
