@@ -1,5 +1,5 @@
 {
-  "name": "@effect/openapi-server-gen",
+  "name": "@davigoli/openapi-server-gen",
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@9.15.0",

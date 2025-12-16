@@ -1,4 +1,4 @@
-# @effect/openapi-server-gen
+# @davigoli/openapi-server-gen
 
 Generate type-safe [Effect](https://effect.website) HttpServer implementations from OpenAPI 3.1 specifications.
 
@@ -22,11 +22,11 @@ From your OpenAPI spec, the generator creates:
 ## Installation
 
 ```bash
-pnpm add @effect/openapi-server-gen
+pnpm add @davigoli/openapi-server-gen
 # or
-npm install @effect/openapi-server-gen
+npm install @davigoli/openapi-server-gen
 # or
-yarn add @effect/openapi-server-gen
+yarn add @davigoli/openapi-server-gen
 ```
 
 ## Quick Start
