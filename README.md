@@ -21,21 +21,37 @@ From your OpenAPI spec, the generator creates:
 
 ## Installation
 
+You can use the generator without installing via `npx`, or install it globally/locally:
+
 ```bash
-pnpm add @davigoli/openapi-server-gen
-# or
-npm install @davigoli/openapi-server-gen
-# or
-yarn add @davigoli/openapi-server-gen
+# Use directly with npx (recommended)
+npx @davigoli/openapi-server-gen ./api-spec.yaml ./generated/api.ts
+
+# Or install globally
+pnpm add -g @davigoli/openapi-server-gen
+
+# Or add to project
+pnpm add -D @davigoli/openapi-server-gen
 ```
 
 ## Quick Start
 
 ### 1. Generate Server Code
 
+Run the generator with your OpenAPI spec:
+
 ```bash
-pnpm tsx src/CLI/Program.ts ./api-spec.yaml ./generated/api.ts
+# Using npx (no installation needed)
+npx @davigoli/openapi-server-gen ./api-spec.yaml ./generated/api.ts
+
+# Or if installed globally
+openapi-server-gen ./api-spec.yaml ./generated/api.ts
+
+# Or via package.json script
+pnpm openapi-server-gen ./api-spec.yaml ./generated/api.ts
 ```
+
+This will generate a single TypeScript file with all your API definitions.
 
 ### 2. Implement Handlers
 
