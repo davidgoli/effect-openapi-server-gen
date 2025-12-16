@@ -114,8 +114,12 @@ export const generateApi = (
     // Parse and generate schema definitions from components/schemas
     const registry = yield* SchemaParser.parseComponents(spec)
 
+    // Track all exports
+    const exports: Array<string> = []
+
     if (registry.schemas.size > 0) {
       lines.push("// Schema definitions from components/schemas")
+      lines.push("")
 
       // Sort schemas topologically to ensure dependencies are declared first
       const sortedSchemas = topologicalSort(registry.schemas)
@@ -124,9 +128,14 @@ export const generateApi = (
       for (const [name, schema] of sortedSchemas) {
         const schemaCode = yield* SchemaGenerator.generateNamedSchema(name, schema)
         lines.push(schemaCode)
-      }
+        lines.push("")
 
-      lines.push("")
+        // Extract the const name for export (e.g., "const FooSchema" -> "FooSchema")
+        const constName = schemaCode.match(/const (\w+)/)?.[1]
+        if (constName) {
+          exports.push(constName)
+        }
+      }
     }
 
     // Add API description as comment if present
@@ -142,11 +151,19 @@ export const generateApi = (
     const operations = yield* PathParser.extractOperations(spec)
     const groups = yield* GroupGenerator.generateGroups(operations)
 
-    // Generate group code
+    // Generate group code and collect exports
     for (const group of groups) {
       const groupCode = yield* GroupGenerator.generateGroupCode(group)
       lines.push(groupCode)
       lines.push("")
+
+      // Export all endpoints in the group
+      for (const operation of group.operations) {
+        exports.push(operation.operationId)
+      }
+
+      // Export the group itself
+      exports.push(`${group.varName}Group`)
     }
 
     // Generate API name from title (remove spaces, keep alphanumeric)
@@ -163,7 +180,10 @@ export const generateApi = (
     lines.push("")
 
     // Export the API
-    lines.push(`export { ${apiName} }`)
+    exports.push(apiName)
+
+    // Export all top-level names
+    lines.push(`export { ${exports.join(", ")} }`)
 
     return lines.join("\n")
   })

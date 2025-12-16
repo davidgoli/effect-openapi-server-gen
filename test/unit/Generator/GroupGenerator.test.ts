@@ -16,7 +16,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           },
           {
             operationId: "createUser",
@@ -26,7 +26,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           }
         ]
 
@@ -48,7 +48,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           },
           {
             operationId: "getPosts",
@@ -58,7 +58,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           }
         ]
 
@@ -79,7 +79,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           }
         ]
 
@@ -100,7 +100,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           }
         ]
 
@@ -121,7 +121,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           }
         ]
 
@@ -141,7 +141,7 @@ describe("GroupGenerator", () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
-          responses: []
+            responses: []
           }
         ]
 
@@ -168,7 +168,7 @@ describe("GroupGenerator", () => {
               pathParameters: [],
               queryParameters: [],
               headerParameters: [],
-          responses: []
+              responses: []
             }
           ]
         }
@@ -194,7 +194,7 @@ describe("GroupGenerator", () => {
               pathParameters: [],
               queryParameters: [],
               headerParameters: [],
-          responses: []
+              responses: []
             },
             {
               operationId: "createUser",
@@ -204,7 +204,7 @@ describe("GroupGenerator", () => {
               pathParameters: [],
               queryParameters: [],
               headerParameters: [],
-          responses: []
+              responses: []
             }
           ]
         }

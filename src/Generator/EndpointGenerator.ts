@@ -33,7 +33,8 @@ export const generateEndpoint = (
     const pathParams: Array<{ name: string; varName: string }> = []
     for (const param of operation.pathParameters) {
       const varName = `${operation.operationId}_${param.name}Param`
-      const schemaCode = yield* SchemaGenerator.generateSchemaCode(param.schema!)
+      // Path parameters are transmitted as strings in URLs, use generateQueryParamSchemaCode
+      const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
       pathParamDeclarations.push(`const ${varName} = HttpApiSchema.param("${param.name}", ${schemaCode})`)
       pathParams.push({ name: param.name, varName })
     }

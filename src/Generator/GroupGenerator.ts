@@ -114,6 +114,7 @@ export const generateGroupCode = (
           const paramVarName = match[1]
           if (!declaredParams.has(paramVarName)) {
             lines.push(paramDecl)
+            lines.push("")
             declaredParams.add(paramVarName)
           }
         }
