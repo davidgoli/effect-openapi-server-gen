@@ -1,0 +1,312 @@
+openapi: 3.1.0
+info:
+  title: Stripe API (Subset)
+  version: 2023-10-16
+  description: A representative subset of the Stripe API for testing
+servers:
+  - url: https://api.stripe.com/v1
+    description: Stripe API
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Stripe API uses bearer token authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            type:
+              type: string
+              description: The type of error returned
+            message:
+              type: string
+              description: A human-readable message providing more details about the error
+            code:
+              type: string
+              description: For card errors, a short string describing the kind of card error that occurred
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the customer
+        object:
+          type: string
+          enum: [customer]
+          description: String representing the object's type
+        email:
+          type: string
+          format: email
+          description: The customer's email address
+        name:
+          type: string
+          description: The customer's full name or business name
+        description:
+          type: string
+          description: An arbitrary string attached to the object
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Set of key-value pairs that you can attach to an object
+        created:
+          type: integer
+          description: Time at which the object was created (Unix timestamp)
+
+    CustomerList:
+      type: object
+      properties:
+        object:
+          type: string
+          enum: [list]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        has_more:
+          type: boolean
+          description: Whether there are more items available
+        url:
+          type: string
+          description: The URL for accessing this list
+
+    PaymentIntent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the payment intent
+        object:
+          type: string
+          enum: [payment_intent]
+        amount:
+          type: integer
+          description: Amount intended to be collected (in cents)
+        currency:
+          type: string
+          description: Three-letter ISO currency code
+        status:
+          type: string
+          enum: [requires_payment_method, requires_confirmation, requires_action, processing, requires_capture, canceled, succeeded]
+          description: Status of this PaymentIntent
+        customer:
+          type: string
+          description: ID of the Customer this PaymentIntent belongs to
+        description:
+          type: string
+          description: An arbitrary string attached to the object
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  /customers:
+    get:
+      operationId: listCustomers
+      summary: List all customers
+      description: Returns a list of your customers
+      tags: [Customers]
+      parameters:
+        - name: limit
+          in: query
+          description: A limit on the number of objects to be returned
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: starting_after
+          in: query
+          description: A cursor for pagination
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: Filter by email address
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerList'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      operationId: createCustomer
+      summary: Create a customer
+      description: Creates a new customer object
+      tags: [Customers]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                description:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /customers/{customer}:
+    get:
+      operationId: retrieveCustomer
+      summary: Retrieve a customer
+      description: Retrieves the details of an existing customer
+      tags: [Customers]
+      parameters:
+        - name: customer
+          in: path
+          required: true
+          description: The identifier of the customer to be retrieved
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      operationId: updateCustomer
+      summary: Update a customer
+      description: Updates the specified customer
+      tags: [Customers]
+      parameters:
+        - name: customer
+          in: path
+          required: true
+          description: The identifier of the customer to be updated
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+  /payment_intents:
+    post:
+      operationId: createPaymentIntent
+      summary: Create a PaymentIntent
+      description: Creates a PaymentIntent object
+      tags: [PaymentIntents]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [amount, currency]
+              properties:
+                amount:
+                  type: integer
+                  description: Amount in cents
+                currency:
+                  type: string
+                  description: Three-letter ISO currency code
+                customer:
+                  type: string
+                  description: ID of the Customer this PaymentIntent belongs to
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntent'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /payment_intents/{intent}:
+    get:
+      operationId: retrievePaymentIntent
+      summary: Retrieve a PaymentIntent
+      description: Retrieves the details of a PaymentIntent
+      tags: [PaymentIntents]
+      parameters:
+        - name: intent
+          in: path
+          required: true
+          description: The identifier of the PaymentIntent to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntent'
+        '404':
+          description: PaymentIntent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

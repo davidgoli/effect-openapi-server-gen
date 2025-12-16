@@ -1,0 +1,487 @@
+openapi: 3.1.0
+info:
+  title: GitHub API (Subset)
+  version: '2022-11-28'
+  description: A representative subset of the GitHub REST API for testing
+servers:
+  - url: https://api.github.com
+    description: GitHub API v3
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: GitHub API token authentication
+
+  schemas:
+    BasicError:
+      type: object
+      properties:
+        message:
+          type: string
+        documentation_url:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              resource:
+                type: string
+              field:
+                type: string
+              code:
+                type: string
+
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier of the repository
+        node_id:
+          type: string
+        name:
+          type: string
+          description: The name of the repository
+        full_name:
+          type: string
+          description: The full name of the repository (owner/repo)
+        private:
+          type: boolean
+          description: Whether the repository is private
+        owner:
+          $ref: '#/components/schemas/User'
+        description:
+          type: string
+          description: The repository description
+        fork:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        homepage:
+          type: string
+        size:
+          type: integer
+        stargazers_count:
+          type: integer
+        watchers_count:
+          type: integer
+        language:
+          type: string
+        forks_count:
+          type: integer
+        open_issues_count:
+          type: integer
+        default_branch:
+          type: string
+
+    User:
+      type: object
+      properties:
+        login:
+          type: string
+        id:
+          type: integer
+        node_id:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        type:
+          type: string
+          enum: [User, Organization]
+
+    Issue:
+      type: object
+      properties:
+        id:
+          type: integer
+        node_id:
+          type: string
+        number:
+          type: integer
+          description: The issue number
+        title:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        state:
+          type: string
+          enum: [open, closed]
+        locked:
+          type: boolean
+        assignee:
+          $ref: '#/components/schemas/User'
+        assignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        comments:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        closed_at:
+          type: string
+          format: date-time
+        body:
+          type: string
+          description: The issue body
+
+    Label:
+      type: object
+      properties:
+        id:
+          type: integer
+        node_id:
+          type: string
+        url:
+          type: string
+        name:
+          type: string
+        color:
+          type: string
+        default:
+          type: boolean
+        description:
+          type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  /repos/{owner}/{repo}:
+    get:
+      operationId: getRepository
+      summary: Get a repository
+      description: Get details about a repository
+      tags: [Repositories]
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          description: The account owner of the repository
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          description: The name of the repository
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicError'
+
+    patch:
+      operationId: updateRepository
+      summary: Update a repository
+      description: Update details about a repository
+      tags: [Repositories]
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the repository
+                description:
+                  type: string
+                  description: A short description of the repository
+                homepage:
+                  type: string
+                private:
+                  type: boolean
+                  description: Whether the repository is private
+                default_branch:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /user/repos:
+    get:
+      operationId: listUserRepos
+      summary: List repositories for the authenticated user
+      description: Lists repositories that the authenticated user has access to
+      tags: [Repositories]
+      parameters:
+        - name: visibility
+          in: query
+          description: Visibility filter
+          schema:
+            type: string
+            enum: [all, public, private]
+            default: all
+        - name: sort
+          in: query
+          description: Sort by
+          schema:
+            type: string
+            enum: [created, updated, pushed, full_name]
+            default: created
+        - name: direction
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: per_page
+          in: query
+          description: Results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+
+    post:
+      operationId: createUserRepo
+      summary: Create a repository for the authenticated user
+      description: Creates a new repository for the authenticated user
+      tags: [Repositories]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: The name of the repository
+                description:
+                  type: string
+                homepage:
+                  type: string
+                private:
+                  type: boolean
+                  default: false
+                auto_init:
+                  type: boolean
+                  default: false
+                  description: Whether to initialize with README
+      responses:
+        '201':
+          description: Repository created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /repos/{owner}/{repo}/issues:
+    get:
+      operationId: listRepoIssues
+      summary: List repository issues
+      description: List issues in a repository
+      tags: [Issues]
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: Issue state
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+        - name: labels
+          in: query
+          description: Comma-separated list of label names
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created, updated, comments]
+            default: created
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Issue'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicError'
+
+    post:
+      operationId: createIssue
+      summary: Create an issue
+      description: Create a new issue
+      tags: [Issues]
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  description: The title of the issue
+                body:
+                  type: string
+                  description: The contents of the issue
+                assignees:
+                  type: array
+                  items:
+                    type: string
+                  description: Logins for Users to assign to this issue
+      responses:
+        '201':
+          description: Issue created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /repos/{owner}/{repo}/issues/{issue_number}:
+    get:
+      operationId: getIssue
+      summary: Get an issue
+      description: Get details about an issue
+      tags: [Issues]
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: issue_number
+          in: path
+          required: true
+          description: The number that identifies the issue
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicError'

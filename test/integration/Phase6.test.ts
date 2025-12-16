@@ -122,4 +122,195 @@ describe('Phase 6 - Advanced Features & Polish', () => {
         expect(generated).toContain('@deprecated This schema is deprecated and may be removed in a future version.')
       }))
   })
+
+  describe('Real-World APIs', () => {
+    describe('stripe-subset.yaml', () => {
+      it('should parse Stripe API subset successfully', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('stripe-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+
+          expect(spec.info.title).toBe('Stripe API (Subset)')
+          expect(Object.keys(spec.paths)).toHaveLength(4)
+        }))
+
+      it('should generate code for Stripe API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('stripe-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // Check server documentation
+          expect(generated).toContain('Server URLs')
+          expect(generated).toContain('https://api.stripe.com/v1')
+          expect(generated).toContain('Base path: /v1')
+
+          // Check security documentation
+          expect(generated).toContain('Security Schemes')
+          expect(generated).toContain('bearerAuth')
+
+          // Check schemas
+          expect(generated).toContain('export const ErrorSchema')
+          expect(generated).toContain('export const CustomerSchema')
+          expect(generated).toContain('export const CustomerListSchema')
+          expect(generated).toContain('export const PaymentIntentSchema')
+
+          // Check endpoints
+          expect(generated).toContain('export const listCustomers')
+          expect(generated).toContain('export const createCustomer')
+          expect(generated).toContain('export const retrieveCustomer')
+          expect(generated).toContain('export const updateCustomer')
+          expect(generated).toContain('export const createPaymentIntent')
+          expect(generated).toContain('export const retrievePaymentIntent')
+
+          // Check groups
+          expect(generated).toContain('export const CustomersGroup')
+          expect(generated).toContain('export const PaymentIntentsGroup')
+
+          // Check API
+          expect(generated).toContain("HttpApi.make('StripeAPISubset')")
+        }))
+
+      it('should handle query parameters in Stripe API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('stripe-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // listCustomers has query params: limit, starting_after, email
+          expect(generated).toContain('setUrlParams')
+          expect(generated).toContain('limit')
+          expect(generated).toContain('starting_after')
+          expect(generated).toContain('email')
+        }))
+
+      it('should handle path parameters in Stripe API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('stripe-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // retrieveCustomer has path param: customer
+          expect(generated).toContain('retrieveCustomer_customerParam')
+          expect(generated).toContain('/customers/${retrieveCustomer_customerParam}')
+        }))
+
+      it('should handle error responses in Stripe API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('stripe-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // Check for error handling
+          expect(generated).toContain('.addError(')
+          expect(generated).toContain('status: 401')
+          expect(generated).toContain('status: 400')
+          expect(generated).toContain('status: 404')
+        }))
+    })
+
+    describe('github-subset.yaml', () => {
+      it('should parse GitHub API subset successfully', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('github-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+
+          expect(spec.info.title).toBe('GitHub API (Subset)')
+          expect(Object.keys(spec.paths)).toHaveLength(4)
+        }))
+
+      it('should generate code for GitHub API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('github-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // Check server documentation
+          expect(generated).toContain('Server URLs')
+          expect(generated).toContain('https://api.github.com')
+
+          // Check security documentation
+          expect(generated).toContain('Security Schemes')
+          expect(generated).toContain('bearerAuth')
+
+          // Check schemas
+          expect(generated).toContain('export const BasicErrorSchema')
+          expect(generated).toContain('export const ValidationErrorSchema')
+          expect(generated).toContain('export const RepositorySchema')
+          expect(generated).toContain('export const UserSchema')
+          expect(generated).toContain('export const IssueSchema')
+          expect(generated).toContain('export const LabelSchema')
+
+          // Check endpoints
+          expect(generated).toContain('export const getRepository')
+          expect(generated).toContain('export const updateRepository')
+          expect(generated).toContain('export const listUserRepos')
+          expect(generated).toContain('export const createUserRepo')
+          expect(generated).toContain('export const listRepoIssues')
+          expect(generated).toContain('export const createIssue')
+          expect(generated).toContain('export const getIssue')
+
+          // Check groups
+          expect(generated).toContain('export const RepositoriesGroup')
+          expect(generated).toContain('export const IssuesGroup')
+
+          // Check API
+          expect(generated).toContain("HttpApi.make('GitHubAPISubset')")
+        }))
+
+      it('should handle multiple path parameters in GitHub API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('github-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // getRepository has two path params: owner, repo
+          expect(generated).toContain('getRepository_ownerParam')
+          expect(generated).toContain('getRepository_repoParam')
+          expect(generated).toContain('/repos/${getRepository_ownerParam}/${getRepository_repoParam}')
+        }))
+
+      it('should handle enum query parameters in GitHub API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('github-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // listUserRepos has enum query params
+          expect(generated).toContain('visibility')
+          expect(generated).toContain('sort')
+          expect(generated).toContain('direction')
+
+          // Check for enum literals
+          expect(generated).toContain("Schema.Literal('all')")
+          expect(generated).toContain("Schema.Literal('public')")
+          expect(generated).toContain("Schema.Literal('private')")
+        }))
+
+      it('should handle $ref relationships in GitHub API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('github-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // Repository schema references User schema
+          expect(generated).toContain('owner: UserSchema')
+
+          // Issue schema references User schema
+          expect(generated).toContain('user: UserSchema')
+          expect(generated).toContain('assignee: UserSchema')
+          expect(generated).toContain('Schema.Array(UserSchema)')
+        }))
+
+      it('should handle 201 Created responses in GitHub API', () =>
+        Effect.gen(function* () {
+          const specContent = readFixture('github-subset.yaml')
+          const spec = yield* OpenApiParser.parse(specContent)
+          const generated = yield* ApiGenerator.generateApi(spec)
+
+          // createUserRepo and createIssue return 201
+          expect(generated).toContain('status: 201')
+        }))
+    })
+  })
 })
