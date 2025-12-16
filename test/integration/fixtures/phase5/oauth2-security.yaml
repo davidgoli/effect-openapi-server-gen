@@ -1,0 +1,76 @@
+openapi: 3.1.0
+info:
+  title: OAuth2 Security Test
+  version: 1.0.0
+
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      summary: List users
+      tags: [users]
+      security:
+        - oauth2AuthCode: [read:users]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /users/{userId}:
+    put:
+      operationId: updateUser
+      summary: Update user
+      tags: [users]
+      security:
+        - oauth2AuthCode: [write:users, read:users]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    oauth2AuthCode:
+      type: oauth2
+      description: OAuth2 authorization code flow
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          refreshUrl: https://example.com/oauth/refresh
+          scopes:
+            read:users: Read user information
+            write:users: Modify user information
+            admin: Administrative access
+
+    oauth2ClientCredentials:
+      type: oauth2
+      description: OAuth2 client credentials flow
+      flows:
+        clientCredentials:
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            api:access: Access to API

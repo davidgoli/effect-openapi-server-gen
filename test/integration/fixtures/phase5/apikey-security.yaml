@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: API Key Security Test
+  version: 1.0.0
+
+# Global security requirement
+security:
+  - apiKeyHeader: []
+
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      summary: List all users
+      tags: [users]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      summary: List users (admin only)
+      tags: [admin]
+      security:
+        - apiKeyQuery: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /public/status:
+    get:
+      operationId: getPublicStatus
+      summary: Public endpoint (no auth)
+      tags: [public]
+      security: []  # Override global security
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+
+components:
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      description: API key in header
+      name: X-API-Key
+      in: header
+
+    apiKeyQuery:
+      type: apiKey
+      description: API key in query parameter
+      name: api_key
+      in: query
+
+    apiKeyCookie:
+      type: apiKey
+      description: API key in cookie
+      name: session_token
+      in: cookie

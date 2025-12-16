@@ -3,6 +3,7 @@
  */
 import * as Effect from 'effect/Effect'
 import type * as OpenApiParser from './OpenApiParser.js'
+import type * as SecurityParser from './SecurityParser.js'
 
 /**
  * @since 1.0.0
@@ -28,6 +29,7 @@ export interface ParsedOperation {
     readonly statusCode: string
     readonly schema: OpenApiParser.SchemaObject
   }>
+  readonly security?: ReadonlyArray<SecurityParser.SecurityRequirement>
 }
 
 /**
@@ -78,6 +80,11 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
           }
         }
 
+        // Extract security requirements (if specified at operation level)
+        const security = (operation as any).security
+          ? ((operation as any).security as ReadonlyArray<Record<string, ReadonlyArray<string>>>)
+          : undefined
+
         operations.push({
           operationId: operation.operationId,
           method,
@@ -90,6 +97,7 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
           headerParameters,
           requestBody,
           responses,
+          security,
         })
       }
     }

@@ -1,0 +1,50 @@
+openapi: 3.1.0
+info:
+  title: HTTP Security Test
+  version: 1.0.0
+
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      summary: List users with bearer token
+      tags: [users]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /admin/settings:
+    get:
+      operationId: getAdminSettings
+      summary: Get admin settings with basic auth
+      tags: [admin]
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: Bearer token authentication
+      scheme: bearer
+      bearerFormat: JWT
+
+    basicAuth:
+      type: http
+      description: Basic HTTP authentication
+      scheme: basic

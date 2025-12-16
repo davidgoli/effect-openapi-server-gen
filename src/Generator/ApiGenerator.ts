@@ -5,6 +5,7 @@ import * as Effect from 'effect/Effect'
 import type * as OpenApiParser from '../Parser/OpenApiParser.js'
 import * as PathParser from '../Parser/PathParser.js'
 import * as SchemaParser from '../Parser/SchemaParser.js'
+import * as SecurityParser from '../Parser/SecurityParser.js'
 import * as GroupGenerator from './GroupGenerator.js'
 import * as SchemaGenerator from './SchemaGenerator.js'
 
@@ -111,6 +112,9 @@ export const generateApi = (
     lines.push("import * as Schema from 'effect/Schema'")
     lines.push('')
 
+    // Parse security schemes
+    const security = yield* SecurityParser.parseSecurity(spec)
+
     // Parse and generate schema definitions from components/schemas
     const registry = yield* SchemaParser.parseComponents(spec)
 
@@ -127,6 +131,79 @@ export const generateApi = (
         lines.push(schemaCode)
         lines.push('')
       }
+    }
+
+    // Generate security documentation if security schemes are defined
+    if (security.schemes.size > 0) {
+      lines.push('/**')
+      lines.push(' * Security Schemes')
+      lines.push(' *')
+
+      for (const [name, scheme] of security.schemes) {
+        switch (scheme.type) {
+          case 'apiKey':
+            lines.push(` * - ${name}: API Key (${scheme.in}: ${scheme.name})`)
+            if (scheme.description) {
+              lines.push(` *   ${scheme.description}`)
+            }
+            break
+
+          case 'http':
+            lines.push(` * - ${name}: HTTP ${scheme.scheme}`)
+            if (scheme.bearerFormat) {
+              lines.push(` *   Bearer format: ${scheme.bearerFormat}`)
+            }
+            if (scheme.description) {
+              lines.push(` *   ${scheme.description}`)
+            }
+            break
+
+          case 'oauth2':
+            lines.push(` * - ${name}: OAuth2`)
+            if (scheme.flows.authorizationCode) {
+              lines.push(' *   Flow: Authorization Code')
+              const scopes = Object.keys(scheme.flows.authorizationCode.scopes)
+              if (scopes.length > 0) {
+                lines.push(` *   Scopes: ${scopes.join(', ')}`)
+              }
+            }
+            if (scheme.flows.implicit) {
+              lines.push(' *   Flow: Implicit')
+            }
+            if (scheme.flows.password) {
+              lines.push(' *   Flow: Password')
+            }
+            if (scheme.flows.clientCredentials) {
+              lines.push(' *   Flow: Client Credentials')
+            }
+            if (scheme.description) {
+              lines.push(` *   ${scheme.description}`)
+            }
+            break
+
+          case 'openIdConnect':
+            lines.push(` * - ${name}: OpenID Connect`)
+            lines.push(` *   URL: ${scheme.openIdConnectUrl}`)
+            if (scheme.description) {
+              lines.push(` *   ${scheme.description}`)
+            }
+            break
+        }
+      }
+
+      if (security.globalRequirements.length > 0) {
+        lines.push(' *')
+        lines.push(' * Global Security Requirements:')
+        for (const req of security.globalRequirements) {
+          const schemes = Object.entries(req)
+            .map(([name, scopes]) => (scopes.length > 0 ? `${name} [${scopes.join(', ')}]` : name))
+            .join(' + ')
+          lines.push(` * - ${schemes}`)
+        }
+      }
+
+      lines.push(' */')
+      lines.push('')
     }
 
     // Add API description as comment if present
