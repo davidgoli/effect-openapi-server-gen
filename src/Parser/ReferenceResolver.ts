@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import * as Data from 'effect/Data'
 import * as Effect from 'effect/Effect'
 import type * as OpenApiParser from './OpenApiParser.js'
 import type * as SchemaParser from './SchemaParser.js'
@@ -11,10 +12,9 @@ import type * as SchemaParser from './SchemaParser.js'
  * @since 1.0.0
  * @category Errors
  */
-export class ReferenceResolutionError {
-  readonly _tag = 'ReferenceResolutionError'
-  constructor(readonly message: string) {}
-}
+export class ReferenceResolutionError extends Data.TaggedError('ReferenceResolutionError')<{
+  readonly message: string
+}> {}
 
 /**
  * Parsed reference information
@@ -34,23 +34,19 @@ export interface ParsedRef {
  * @category Parsing
  */
 export const parseRefString = (ref: string): Effect.Effect<ParsedRef, ReferenceResolutionError> =>
-  Effect.sync(() => {
+  Effect.gen(function* () {
     // Expected format: #/components/schemas/SchemaName
     const match = ref.match(/^#\/components\/schemas\/(.+)$/)
 
     if (!match) {
-      throw new ReferenceResolutionError(`Invalid $ref format: ${ref}`)
+      return yield* new ReferenceResolutionError({ message: `Invalid $ref format: ${ref}` })
     }
 
     return {
       type: 'component' as const,
       schemaName: match[1],
     }
-  }).pipe(
-    Effect.catchAll((error: unknown) =>
-      Effect.fail(new ReferenceResolutionError(error instanceof Error ? error.message : String(error)))
-    )
-  )
+  })
 
 /**
  * Resolve a schema, following $ref references
@@ -120,7 +116,7 @@ export const resolveSchema = (
     const referencedSchema = registry.schemas.get(parsed.schemaName)
 
     if (!referencedSchema) {
-      return yield* Effect.fail(new ReferenceResolutionError(`Schema not found: ${parsed.schemaName}`))
+      return yield* new ReferenceResolutionError({ message: `Schema not found: ${parsed.schemaName}` })
     }
 
     // Add this schema to visited set

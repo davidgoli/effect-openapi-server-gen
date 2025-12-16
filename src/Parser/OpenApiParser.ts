@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import * as Data from 'effect/Data'
 import * as Effect from 'effect/Effect'
 import * as YAML from 'yaml'
 
@@ -149,10 +150,9 @@ export interface ComponentsObject {
  * @since 1.0.0
  * @category Errors
  */
-export class ParseError {
-  readonly _tag = 'ParseError'
-  constructor(readonly message: string) {}
-}
+export class ParseError extends Data.TaggedError('ParseError')<{
+  readonly message: string
+}> {}
 
 /**
  * Parse an OpenAPI 3.1 specification from a JSON or YAML string
@@ -163,52 +163,52 @@ export class ParseError {
 export const parse = (content: string): Effect.Effect<OpenApiSpec, ParseError> =>
   Effect.gen(function* () {
     // Try to parse as JSON or YAML
-    let spec: unknown
-    try {
-      spec = JSON.parse(content)
-    } catch {
-      try {
-        spec = YAML.parse(content)
-      } catch (error) {
-        return yield* Effect.fail(new ParseError(`Failed to parse spec: ${String(error)}`))
-      }
-    }
+    const spec = yield* Effect.try({
+      try: () => {
+        try {
+          return JSON.parse(content)
+        } catch {
+          return YAML.parse(content)
+        }
+      },
+      catch: (error) => new ParseError({ message: `Failed to parse spec: ${String(error)}` }),
+    })
 
     // Validate the spec structure
     if (typeof spec !== 'object' || spec === null) {
-      return yield* Effect.fail(new ParseError('Spec must be an object'))
+      return yield* new ParseError({ message: 'Spec must be an object' })
     }
 
     const obj = spec as Record<string, unknown>
 
     // Validate openapi version
     if (typeof obj.openapi !== 'string') {
-      return yield* Effect.fail(new ParseError('Missing required field: openapi'))
+      return yield* new ParseError({ message: 'Missing required field: openapi' })
     }
 
     if (!obj.openapi.startsWith('3.1')) {
-      return yield* Effect.fail(
-        new ParseError(`Unsupported OpenAPI version: ${obj.openapi}. Only OpenAPI 3.1.x is supported.`)
-      )
+      return yield* new ParseError({
+        message: `Unsupported OpenAPI version: ${obj.openapi}. Only OpenAPI 3.1.x is supported.`,
+      })
     }
 
     // Validate info object
     if (typeof obj.info !== 'object' || obj.info === null) {
-      return yield* Effect.fail(new ParseError('Missing or invalid required field: info'))
+      return yield* new ParseError({ message: 'Missing or invalid required field: info' })
     }
 
     const info = obj.info as Record<string, unknown>
     if (typeof info.title !== 'string') {
-      return yield* Effect.fail(new ParseError('Missing required field: info.title'))
+      return yield* new ParseError({ message: 'Missing required field: info.title' })
     }
 
     if (typeof info.version !== 'string') {
-      return yield* Effect.fail(new ParseError('Missing required field: info.version'))
+      return yield* new ParseError({ message: 'Missing required field: info.version' })
     }
 
     // Validate paths object
     if (typeof obj.paths !== 'object' || obj.paths === null) {
-      return yield* Effect.fail(new ParseError('Missing or invalid required field: paths'))
+      return yield* new ParseError({ message: 'Missing or invalid required field: paths' })
     }
 
     // Validate operationId for all operations
@@ -226,9 +226,9 @@ export const parse = (content: string): Effect.Effect<OpenApiSpec, ParseError> =
         if (typeof operation === 'object' && operation !== null) {
           const op = operation as Record<string, unknown>
           if (typeof op.operationId !== 'string') {
-            return yield* Effect.fail(
-              new ParseError(`Missing required field operationId for operation: ${method.toUpperCase()} ${path}`)
-            )
+            return yield* new ParseError({
+              message: `Missing required field operationId for operation: ${method.toUpperCase()} ${path}`,
+            })
           }
         }
       }

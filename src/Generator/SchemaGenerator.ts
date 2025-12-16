@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import * as Data from 'effect/Data'
 import * as Effect from 'effect/Effect'
 import type * as OpenApiParser from '../Parser/OpenApiParser.js'
 
@@ -8,10 +9,9 @@ import type * as OpenApiParser from '../Parser/OpenApiParser.js'
  * @since 1.0.0
  * @category Errors
  */
-export class SchemaGenerationError {
-  readonly _tag = 'SchemaGenerationError'
-  constructor(readonly message: string) {}
-}
+export class SchemaGenerationError extends Data.TaggedError('SchemaGenerationError')<{
+  readonly message: string
+}> {}
 
 /**
  * Generate Effect Schema code from an OpenAPI Schema Object
@@ -31,7 +31,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
     if (schema.allOf) {
       const schemas = schema.allOf
       if (schemas.length === 0) {
-        return yield* Effect.fail(new SchemaGenerationError('allOf must have at least one schema'))
+        return yield* new SchemaGenerationError({ message: 'allOf must have at least one schema' })
       }
 
       // Generate code for all schemas in allOf
@@ -58,7 +58,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
     if (schema.oneOf) {
       const schemas = schema.oneOf
       if (schemas.length === 0) {
-        return yield* Effect.fail(new SchemaGenerationError('oneOf must have at least one schema'))
+        return yield* new SchemaGenerationError({ message: 'oneOf must have at least one schema' })
       }
 
       const schemaCodes: Array<string> = []
@@ -74,7 +74,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
     if (schema.anyOf) {
       const schemas = schema.anyOf
       if (schemas.length === 0) {
-        return yield* Effect.fail(new SchemaGenerationError('anyOf must have at least one schema'))
+        return yield* new SchemaGenerationError({ message: 'anyOf must have at least one schema' })
       }
 
       const schemaCodes: Array<string> = []
@@ -188,7 +188,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
     // Handle array type
     if (schema.type === 'array') {
       if (!schema.items) {
-        return yield* Effect.fail(new SchemaGenerationError("Array type must have 'items' property"))
+        return yield* new SchemaGenerationError({ message: "Array type must have 'items' property" })
       }
 
       const itemsCode = yield* generateSchemaCode(schema.items)
@@ -235,7 +235,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
       return addAnnotations(structCode, schema)
     }
 
-    return yield* Effect.fail(new SchemaGenerationError(`Unsupported schema type: ${schema.type || 'undefined'}`))
+    return yield* new SchemaGenerationError({ message: `Unsupported schema type: ${schema.type || 'undefined'}` })
   })
 
 /**
