@@ -12,7 +12,7 @@ import {
   TodoAPI,
   type TodoSchema,
   type CreateTodoRequestSchema,
-  type UpdateTodoRequestSchema
+  type UpdateTodoRequestSchema,
 } from './generated-api.js'
 
 /**
