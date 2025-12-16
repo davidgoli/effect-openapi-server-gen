@@ -1,7 +1,7 @@
-import * as SchemaGenerator from "@effect/openapi-server-gen/Generator/SchemaGenerator"
-import type * as OpenApiParser from "@effect/openapi-server-gen/Parser/OpenApiParser"
 import { describe, expect, it } from "@effect/vitest"
 import * as Effect from "effect/Effect"
+import * as SchemaGenerator from "../../../src/Generator/SchemaGenerator.js"
+import type * as OpenApiParser from "../../../src/Parser/OpenApiParser.js"
 
 describe("SchemaGenerator", () => {
   describe("generateSchemaCode", () => {

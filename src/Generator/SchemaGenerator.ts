@@ -1,8 +1,8 @@
 /**
  * @since 1.0.0
  */
-import type * as OpenApiParser from "@effect/openapi-server-gen/Parser/OpenApiParser"
 import * as Effect from "effect/Effect"
+import type * as OpenApiParser from "../Parser/OpenApiParser.js"
 
 /**
  * @since 1.0.0

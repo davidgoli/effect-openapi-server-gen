@@ -1,6 +1,6 @@
-import * as OpenApiParser from "@effect/openapi-server-gen/Parser/OpenApiParser"
 import { describe, expect, it } from "@effect/vitest"
 import * as Effect from "effect/Effect"
+import * as OpenApiParser from "../../../src/Parser/OpenApiParser.js"
 
 describe("OpenApiParser", () => {
   describe("parse", () => {
