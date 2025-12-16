@@ -12,8 +12,41 @@ import type * as SchemaGenerator from "./SchemaGenerator.js"
  */
 export interface OperationGroup {
   readonly name: string
+  readonly varName: string
   readonly capitalizedName: string
   readonly operations: ReadonlyArray<PathParser.ParsedOperation>
+}
+
+/**
+ * Sanitize a string to be a valid JavaScript identifier (camelCase)
+ * Handles kebab-case, spaces, and special characters
+ */
+const sanitizeIdentifier = (name: string): string => {
+  // Replace non-alphanumeric characters with spaces, then split
+  const parts = name.replace(/[^a-zA-Z0-9]+/g, " ").trim().split(/\s+/)
+
+  // Convert to camelCase
+  return parts
+    .map((part, index) => {
+      if (index === 0) {
+        // First part: lowercase
+        return part.charAt(0).toLowerCase() + part.slice(1)
+      } else {
+        // Subsequent parts: capitalize first letter
+        return part.charAt(0).toUpperCase() + part.slice(1)
+      }
+    })
+    .join("")
+}
+
+/**
+ * Capitalize group name (handle kebab-case)
+ */
+const capitalizeGroupName = (name: string): string => {
+  return name
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("")
 }
 
 /**
@@ -43,6 +76,7 @@ export const generateGroups = (
     for (const [name, ops] of groupMap.entries()) {
       groups.push({
         name,
+        varName: sanitizeIdentifier(name),
         capitalizedName: capitalizeGroupName(name),
         operations: ops
       })
@@ -92,7 +126,8 @@ export const generateGroupCode = (
     }
 
     // Generate the group definition
-    let groupCode = `const ${group.name}Group = HttpApiGroup.make("${group.name}")`
+    // Use the sanitized variable name from the group
+    let groupCode = `const ${group.varName}Group = HttpApiGroup.make("${group.name}")`
 
     for (const varName of endpointVars) {
       groupCode += `\n  .add(${varName})`
@@ -102,13 +137,3 @@ export const generateGroupCode = (
 
     return lines.join("\n")
   })
-
-/**
- * Capitalize group name (handle kebab-case)
- */
-const capitalizeGroupName = (name: string): string => {
-  return name
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")
-}

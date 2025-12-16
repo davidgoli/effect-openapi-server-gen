@@ -230,7 +230,9 @@ export const generateSchemaCode = (
           propCode = `Schema.optional(${propCode})`
         }
 
-        propertyEntries.push(`${name}: ${propCode}`)
+        // Quote property name if it contains special characters or is a reserved word
+        const propertyName = needsQuoting(name) ? `"${name}"` : name
+        propertyEntries.push(`${propertyName}: ${propCode}`)
       }
 
       const structCode = `Schema.Struct({\n  ${propertyEntries.join(",\n  ")}\n})`
@@ -275,4 +277,67 @@ const addAnnotations = (code: string, schema: OpenApiParser.SchemaObject): strin
     return `${code}.annotations({ description: "${escapedDescription}" })`
   }
   return code
+}
+
+/**
+ * Check if a property name needs to be quoted in object literal
+ * JavaScript identifiers can only contain letters, digits, $, _ and cannot start with a digit
+ */
+const needsQuoting = (name: string): boolean => {
+  // Check for reserved keywords
+  const reserved = new Set([
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "export",
+    "extends",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "import",
+    "in",
+    "instanceof",
+    "new",
+    "return",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
+    "let",
+    "static",
+    "enum",
+    "await",
+    "implements",
+    "interface",
+    "package",
+    "private",
+    "protected",
+    "public"
+  ])
+
+  if (reserved.has(name)) {
+    return true
+  }
+
+  // Check if it's a valid identifier
+  // Must start with letter, $, or _
+  // Can contain letters, digits, $, _
+  const validIdentifier = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
+  return !validIdentifier.test(name)
 }
