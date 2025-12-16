@@ -19,3 +19,4 @@ output.ts
 *.ts
 !src/**/*.ts
 !test/**/*.ts
+!examples/**/*.ts

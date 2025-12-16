@@ -1,0 +1,22 @@
+{
+  "name": "todo-api-example",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Example Todo API using @davidgoli/openapi-server-gen",
+  "scripts": {
+    "dev": "tsx watch implementation.ts",
+    "start": "tsx implementation.ts",
+    "generate": "openapi-server-gen openapi.yaml generated-api.ts"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.93.0",
+    "@effect/platform-node": "^0.89.0",
+    "effect": "^3.17.7"
+  },
+  "devDependencies": {
+    "@davidgoli/openapi-server-gen": "workspace:*",
+    "tsx": "^4.17.0",
+    "typescript": "^5.6.2"
+  }
+}

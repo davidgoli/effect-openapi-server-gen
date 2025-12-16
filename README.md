@@ -85,6 +85,19 @@ const MyApiLive = HttpApiBuilder.api(MyApi).pipe(
 )
 ```
 
+## Examples
+
+Check out the [examples](./examples) directory for complete, working examples:
+
+- **[Todo API](./examples/todo-api)** - Full CRUD API with in-memory store, showing:
+  - Path and query parameters
+  - Request validation
+  - Multiple status codes
+  - Effect Services and Layers
+  - Complete type safety
+
+Each example includes a detailed README with code walkthrough and testing instructions.
+
 ## Supported OpenAPI Features
 
 ### ✅ Phase 1: Foundation & Basic Paths
