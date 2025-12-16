@@ -260,7 +260,14 @@ const sanitizeIdentifier = (name: string): string => {
     .split(/\s+/)
 
   // Convert to PascalCase
-  return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+  const sanitized = parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+
+  // Warn if the name was altered
+  if (sanitized !== name) {
+    console.warn(`⚠️  Schema name sanitized: "${name}" → "${sanitized}"`)
+  }
+
+  return sanitized
 }
 
 /**

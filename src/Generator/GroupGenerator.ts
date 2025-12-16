@@ -29,7 +29,7 @@ const sanitizeIdentifier = (name: string): string => {
     .split(/\s+/)
 
   // Convert to camelCase
-  return parts
+  const sanitized = parts
     .map((part, index) => {
       if (index === 0) {
         // First part: lowercase
@@ -40,6 +40,13 @@ const sanitizeIdentifier = (name: string): string => {
       }
     })
     .join('')
+
+  // Warn if the name was altered
+  if (sanitized !== name) {
+    console.warn(`⚠️  Group name sanitized: "${name}" → "${sanitized}"`)
+  }
+
+  return sanitized
 }
 
 /**
