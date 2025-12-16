@@ -29,6 +29,65 @@ export const generateSchemaCode = (
       return `${schemaName}Schema`
     }
 
+    // Handle allOf (schema composition)
+    if (schema.allOf) {
+      const schemas = schema.allOf
+      if (schemas.length === 0) {
+        return yield* Effect.fail(new SchemaGenerationError("allOf must have at least one schema"))
+      }
+
+      // Generate code for all schemas in allOf
+      const schemaCodes: Array<string> = []
+      for (const subSchema of schemas) {
+        const code = yield* generateSchemaCode(subSchema)
+        schemaCodes.push(code)
+      }
+
+      // Use Schema.extend for composition
+      if (schemaCodes.length === 1) {
+        return schemaCodes[0]
+      }
+
+      // Extend the first schema with the rest
+      let result = schemaCodes[0]
+      for (let i = 1; i < schemaCodes.length; i++) {
+        result = `Schema.extend(${result}, ${schemaCodes[i]})`
+      }
+      return result
+    }
+
+    // Handle oneOf (union types)
+    if (schema.oneOf) {
+      const schemas = schema.oneOf
+      if (schemas.length === 0) {
+        return yield* Effect.fail(new SchemaGenerationError("oneOf must have at least one schema"))
+      }
+
+      const schemaCodes: Array<string> = []
+      for (const subSchema of schemas) {
+        const code = yield* generateSchemaCode(subSchema)
+        schemaCodes.push(code)
+      }
+
+      return `Schema.Union(${schemaCodes.join(", ")})`
+    }
+
+    // Handle anyOf (union types, similar to oneOf)
+    if (schema.anyOf) {
+      const schemas = schema.anyOf
+      if (schemas.length === 0) {
+        return yield* Effect.fail(new SchemaGenerationError("anyOf must have at least one schema"))
+      }
+
+      const schemaCodes: Array<string> = []
+      for (const subSchema of schemas) {
+        const code = yield* generateSchemaCode(subSchema)
+        schemaCodes.push(code)
+      }
+
+      return `Schema.Union(${schemaCodes.join(", ")})`
+    }
+
     // Handle const keyword (OpenAPI 3.1)
     if ("const" in schema) {
       const value = schema.const

@@ -472,4 +472,75 @@ describe("SchemaGenerator", () => {
         expect(result).toContain("Schema.Null")
       }))
   })
+
+  describe("schema combinators - Phase 3", () => {
+    it("should handle allOf with $ref and inline schemas", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          allOf: [
+            { $ref: "#/components/schemas/BaseEntity" },
+            {
+              type: "object",
+              properties: {
+                name: { type: "string" }
+              },
+              required: ["name"]
+            }
+          ]
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.extend")
+        expect(result).toContain("BaseEntitySchema")
+        expect(result).toContain("name: Schema.String")
+      }))
+
+    it("should handle oneOf as Schema.Union", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          oneOf: [
+            { type: "string" },
+            { type: "number" }
+          ]
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Union")
+        expect(result).toContain("Schema.String")
+        expect(result).toContain("Schema.Number")
+      }))
+
+    it("should handle oneOf with $refs", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          oneOf: [
+            { $ref: "#/components/schemas/User" },
+            { $ref: "#/components/schemas/Product" }
+          ]
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Union")
+        expect(result).toContain("UserSchema")
+        expect(result).toContain("ProductSchema")
+      }))
+
+    it("should handle anyOf as Schema.Union", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          anyOf: [
+            { type: "string", format: "email" },
+            { type: "string", format: "uri" }
+          ]
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Union")
+        expect(result).toContain("Schema.String")
+      }))
+  })
 })
