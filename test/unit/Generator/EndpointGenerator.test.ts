@@ -15,6 +15,7 @@ describe('EndpointGenerator', () => {
           pathParameters: [],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           responses: [],
         }
 
@@ -35,6 +36,7 @@ describe('EndpointGenerator', () => {
           pathParameters: [],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           responses: [],
         }
 
@@ -60,6 +62,7 @@ describe('EndpointGenerator', () => {
           ],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           responses: [],
         }
 
@@ -95,6 +98,7 @@ describe('EndpointGenerator', () => {
           ],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           responses: [],
         }
 
@@ -116,6 +120,7 @@ describe('EndpointGenerator', () => {
           pathParameters: [],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           requestBody: {
             schema: {
               type: 'object',
@@ -146,6 +151,7 @@ describe('EndpointGenerator', () => {
           pathParameters: [],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           responses: [
             {
               statusCode: '200',
@@ -185,6 +191,7 @@ describe('EndpointGenerator', () => {
             },
           ],
           headerParameters: [],
+          cookieParameters: [],
           responses: [],
         }
 
@@ -219,6 +226,7 @@ describe('EndpointGenerator', () => {
               schema: { type: 'string', format: 'uuid' },
             },
           ],
+          cookieParameters: [],
           responses: [],
         }
 
@@ -261,6 +269,7 @@ describe('EndpointGenerator', () => {
             },
           ],
           headerParameters: [],
+          cookieParameters: [],
           responses: [],
         }
 
@@ -283,6 +292,7 @@ describe('EndpointGenerator', () => {
           pathParameters: [],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           requestBody: {
             schema: { type: 'object' },
             required: true,
@@ -337,6 +347,7 @@ describe('EndpointGenerator', () => {
           pathParameters: [],
           queryParameters: [],
           headerParameters: [],
+          cookieParameters: [],
           responses: [
             {
               statusCode: '200',
@@ -379,6 +390,7 @@ describe('EndpointGenerator', () => {
             },
           ],
           headerParameters: [],
+          cookieParameters: [],
           requestBody: {
             schema: {
               type: 'object',

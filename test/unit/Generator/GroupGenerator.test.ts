@@ -16,6 +16,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
           {
@@ -26,6 +27,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
         ]
@@ -48,6 +50,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
           {
@@ -58,6 +61,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
         ]
@@ -79,6 +83,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
         ]
@@ -100,6 +105,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
         ]
@@ -121,6 +127,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
         ]
@@ -141,6 +148,7 @@ describe('GroupGenerator', () => {
             pathParameters: [],
             queryParameters: [],
             headerParameters: [],
+          cookieParameters: [],
             responses: [],
           },
         ]
@@ -168,6 +176,7 @@ describe('GroupGenerator', () => {
               pathParameters: [],
               queryParameters: [],
               headerParameters: [],
+          cookieParameters: [],
               responses: [],
             },
           ],
@@ -194,6 +203,7 @@ describe('GroupGenerator', () => {
               pathParameters: [],
               queryParameters: [],
               headerParameters: [],
+          cookieParameters: [],
               responses: [],
             },
             {
@@ -204,6 +214,7 @@ describe('GroupGenerator', () => {
               pathParameters: [],
               queryParameters: [],
               headerParameters: [],
+          cookieParameters: [],
               responses: [],
             },
           ],
