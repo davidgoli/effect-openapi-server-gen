@@ -1,0 +1,175 @@
+# Circular References Test
+# Exercises: circular references, two-pass resolution, Schema.suspend() for lazy evaluation
+openapi: 3.1.0
+info:
+  title: Circular References API
+  version: 1.0.0
+  description: Test circular reference handling
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+        name:
+          type: string
+          description: User name
+        email:
+          type: string
+          description: User email
+        friends:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          description: User's friends (circular reference)
+        bestFriend:
+          $ref: '#/components/schemas/User'
+          description: Best friend (circular reference)
+      required:
+        - id
+        - name
+        - email
+
+    TreeNode:
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+        parent:
+          $ref: '#/components/schemas/TreeNode'
+      required:
+        - id
+        - value
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        parentOrg:
+          $ref: '#/components/schemas/Organization'
+        childOrgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+        employees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+      required:
+        - id
+        - name
+
+    Employee:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        organization:
+          $ref: '#/components/schemas/Organization'
+        manager:
+          $ref: '#/components/schemas/Employee'
+        directReports:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+      required:
+        - id
+        - name
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get all users
+      tags:
+        - users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      operationId: createUser
+      summary: Create a user
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /tree-nodes:
+    get:
+      operationId: getTreeNodes
+      summary: Get tree nodes
+      tags:
+        - trees
+      responses:
+        "200":
+          description: List of tree nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TreeNode'
+
+  /organizations:
+    get:
+      operationId: getOrganizations
+      summary: Get organizations
+      tags:
+        - organizations
+      responses:
+        "200":
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+
+  /employees:
+    get:
+      operationId: getEmployees
+      summary: Get employees
+      tags:
+        - employees
+      responses:
+        "200":
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'

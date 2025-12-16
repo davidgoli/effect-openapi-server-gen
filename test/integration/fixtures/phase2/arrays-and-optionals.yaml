@@ -1,0 +1,109 @@
+# Arrays and Optional Fields Test
+# Exercises: optional vs required fields, array types, Schema.optional(), Schema.Array()
+openapi: 3.1.0
+info:
+  title: Arrays and Optionals API
+  version: 1.0.0
+  description: Test optional fields and array handling
+
+paths:
+  /items:
+    get:
+      operationId: getItems
+      summary: Get list of items
+      tags:
+        - items
+      parameters:
+        - name: tags
+          in: query
+          description: Filter by tags (array)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: limit
+          in: query
+          description: Optional limit
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Item ID
+                    name:
+                      type: string
+                      description: Item name
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                      description: Item tags
+                    metadata:
+                      type: object
+                      properties:
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                      description: Optional metadata
+                  required:
+                    - id
+                    - name
+
+    post:
+      operationId: createItem
+      summary: Create a new item
+      tags:
+        - items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                  description: Optional description
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional tags array
+                priority:
+                  type: number
+                  description: Optional priority
+              required:
+                - name
+      responses:
+        "201":
+          description: Item created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - id
+                  - name

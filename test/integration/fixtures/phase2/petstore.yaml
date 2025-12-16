@@ -1,0 +1,221 @@
+# Classic Petstore API
+# Exercises: components/schemas, $ref resolution, reusable schemas, common OpenAPI patterns
+openapi: 3.1.0
+info:
+  title: Petstore API
+  version: 1.0.0
+  description: Classic OpenAPI Petstore example
+
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Category ID
+        name:
+          type: string
+          description: Category name
+      required:
+        - id
+        - name
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+      required:
+        - id
+        - name
+
+    Pet:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Pet ID
+        name:
+          type: string
+          description: Pet name
+        category:
+          $ref: '#/components/schemas/Category'
+        photoUrls:
+          type: array
+          items:
+            type: string
+          description: Pet photos
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          description: Pet tags
+        status:
+          type: string
+          description: Pet status
+          enum:
+            - available
+            - pending
+            - sold
+      required:
+        - id
+        - name
+        - photoUrls
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: number
+        petId:
+          type: number
+        quantity:
+          type: number
+        shipDate:
+          type: string
+        status:
+          type: string
+          enum:
+            - placed
+            - approved
+            - delivered
+        complete:
+          type: boolean
+      required:
+        - id
+        - petId
+        - quantity
+
+paths:
+  /pets:
+    get:
+      operationId: getPets
+      summary: List all pets
+      tags:
+        - pets
+      parameters:
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum:
+              - available
+              - pending
+              - sold
+      responses:
+        "200":
+          description: List of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+
+    post:
+      operationId: createPet
+      summary: Add a new pet
+      tags:
+        - pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        "201":
+          description: Pet created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+  /pets/{petId}:
+    get:
+      operationId: getPetById
+      summary: Get a pet by ID
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Pet details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+    put:
+      operationId: updatePet
+      summary: Update a pet
+      tags:
+        - pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        "200":
+          description: Pet updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+  /orders:
+    post:
+      operationId: createOrder
+      summary: Place an order
+      tags:
+        - store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        "201":
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      summary: Get an order by ID
+      tags:
+        - store
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'

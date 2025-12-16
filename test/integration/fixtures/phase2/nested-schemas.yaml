@@ -1,0 +1,159 @@
+# Nested Schemas Test
+# Exercises: deep object nesting, objects within objects, arrays of objects, complex hierarchies
+openapi: 3.1.0
+info:
+  title: Nested Schemas API
+  version: 1.0.0
+  description: Test deeply nested schema structures
+
+components:
+  schemas:
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+        coordinates:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+          required:
+            - latitude
+            - longitude
+      required:
+        - street
+        - city
+
+    ContactInfo:
+      type: object
+      properties:
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+      required:
+        - email
+
+    Department:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        manager:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            contact:
+              $ref: '#/components/schemas/ContactInfo'
+          required:
+            - id
+            - name
+      required:
+        - id
+        - name
+
+    Employee:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        contact:
+          $ref: '#/components/schemas/ContactInfo'
+        department:
+          $ref: '#/components/schemas/Department'
+        skills:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              level:
+                type: number
+              certifications:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    issuer:
+                      type: string
+                    dateObtained:
+                      type: string
+            required:
+              - name
+              - level
+      required:
+        - id
+        - name
+
+paths:
+  /employees:
+    get:
+      operationId: getEmployees
+      summary: Get all employees
+      tags:
+        - employees
+      responses:
+        "200":
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+
+    post:
+      operationId: createEmployee
+      summary: Create an employee
+      tags:
+        - employees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+      responses:
+        "201":
+          description: Employee created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+
+  /departments:
+    get:
+      operationId: getDepartments
+      summary: Get all departments
+      tags:
+        - departments
+      responses:
+        "200":
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Department'
