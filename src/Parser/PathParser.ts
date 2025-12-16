@@ -1,8 +1,8 @@
 /**
  * @since 1.0.0
  */
-import * as Effect from "effect/Effect"
-import type * as OpenApiParser from "./OpenApiParser.js"
+import * as Effect from 'effect/Effect'
+import type * as OpenApiParser from './OpenApiParser.js'
 
 /**
  * @since 1.0.0
@@ -10,7 +10,7 @@ import type * as OpenApiParser from "./OpenApiParser.js"
  */
 export interface ParsedOperation {
   readonly operationId: string
-  readonly method: "get" | "post" | "put" | "patch" | "delete"
+  readonly method: 'get' | 'post' | 'put' | 'patch' | 'delete'
   readonly path: string
   readonly summary?: string | undefined
   readonly description?: string | undefined
@@ -37,18 +37,18 @@ export interface ParsedOperation {
  * @category Parsing
  */
 export const extractOperations = (
-  spec: OpenApiParser.OpenApiSpec
+  spec: OpenApiParser.OpenApiSpec,
 ): Effect.Effect<ReadonlyArray<ParsedOperation>> =>
   Effect.sync(() => {
     const operations: Array<ParsedOperation> = []
 
-    for (const [path, pathItem] of Object.entries(spec.paths)) {
-      const methods: Array<"get" | "post" | "put" | "patch" | "delete"> = [
-        "get",
-        "post",
-        "put",
-        "patch",
-        "delete"
+    for (const [path, pathItem,] of Object.entries(spec.paths,)) {
+      const methods: Array<'get' | 'post' | 'put' | 'patch' | 'delete'> = [
+        'get',
+        'post',
+        'put',
+        'patch',
+        'delete',
       ]
 
       for (const method of methods) {
@@ -58,31 +58,31 @@ export const extractOperations = (
         const parameters = operation.parameters || []
 
         // Separate parameters by type
-        const pathParameters = parameters.filter((p) => p.in === "path")
-        const queryParameters = parameters.filter((p) => p.in === "query")
-        const headerParameters = parameters.filter((p) => p.in === "header")
+        const pathParameters = parameters.filter((p,) => p.in === 'path')
+        const queryParameters = parameters.filter((p,) => p.in === 'query')
+        const headerParameters = parameters.filter((p,) => p.in === 'header')
 
         // Extract request body
-        let requestBody: ParsedOperation["requestBody"] | undefined
+        let requestBody: ParsedOperation['requestBody'] | undefined
         if (operation.requestBody?.content) {
-          const content = operation.requestBody.content["application/json"]
+          const content = operation.requestBody.content['application/json']
           if (content?.schema) {
             requestBody = {
               schema: content.schema,
-              required: operation.requestBody.required ?? false
+              required: operation.requestBody.required ?? false,
             }
           }
         }
 
         // Extract all responses with schemas
         const responses: Array<{ statusCode: string; schema: OpenApiParser.SchemaObject }> = []
-        for (const [statusCode, response] of Object.entries(operation.responses)) {
-          const content = response.content?.["application/json"]
+        for (const [statusCode, response,] of Object.entries(operation.responses,)) {
+          const content = response.content?.['application/json']
           if (content?.schema) {
             responses.push({
               statusCode,
-              schema: content.schema
-            })
+              schema: content.schema,
+            },)
           }
         }
 
@@ -97,10 +97,10 @@ export const extractOperations = (
           queryParameters,
           headerParameters,
           requestBody,
-          responses
-        })
+          responses,
+        },)
       }
     }
 
     return operations
-  })
+  },)

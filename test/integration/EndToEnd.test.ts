@@ -1,239 +1,239 @@
-import { describe, expect, it } from "@effect/vitest"
-import * as Effect from "effect/Effect"
-import * as fs from "node:fs"
-import * as path from "node:path"
-import * as ApiGenerator from "../../src/Generator/ApiGenerator.js"
-import * as CodeEmitter from "../../src/Generator/CodeEmitter.js"
-import * as OpenApiParser from "../../src/Parser/OpenApiParser.js"
+import { describe, expect, it, } from '@effect/vitest'
+import * as Effect from 'effect/Effect'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as ApiGenerator from '../../src/Generator/ApiGenerator.js'
+import * as CodeEmitter from '../../src/Generator/CodeEmitter.js'
+import * as OpenApiParser from '../../src/Parser/OpenApiParser.js'
 
-const fixturesDir = path.join(__dirname, "fixtures", "phase1")
+const fixturesDir = path.join(__dirname, 'fixtures', 'phase1',)
 
-const readFixture = (filename: string): string => {
-  const fixturePath = path.join(fixturesDir, filename)
-  return fs.readFileSync(fixturePath, "utf-8")
+const readFixture = (filename: string,): string => {
+  const fixturePath = path.join(fixturesDir, filename,)
+  return fs.readFileSync(fixturePath, 'utf-8',)
 }
 
-describe("EndToEnd - Phase 1", () => {
-  describe("simple-crud.yaml", () => {
-    it("should generate valid TypeScript code from CRUD spec", () =>
+describe('EndToEnd - Phase 1', () => {
+  describe('simple-crud.yaml', () => {
+    it('should generate valid TypeScript code from CRUD spec', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
+        const specContent = readFixture('simple-crud.yaml',)
 
         // Parse the spec
-        const spec = yield* OpenApiParser.parse(specContent)
+        const spec = yield* OpenApiParser.parse(specContent,)
 
         // Verify spec was parsed correctly
-        expect(spec.info.title).toBe("Simple CRUD API")
-        expect(spec.info.version).toBe("1.0.0")
-        expect(Object.keys(spec.paths)).toHaveLength(2)
+        expect(spec.info.title,).toBe('Simple CRUD API',)
+        expect(spec.info.version,).toBe('1.0.0',)
+        expect(Object.keys(spec.paths,),).toHaveLength(2,)
 
         // Generate API code
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
         // Verify code structure
-        expect(apiCode).toContain("import * as HttpApi from \"@effect/platform/HttpApi\"")
-        expect(apiCode).toContain("import * as HttpApiEndpoint from \"@effect/platform/HttpApiEndpoint\"")
-        expect(apiCode).toContain("import * as HttpApiGroup from \"@effect/platform/HttpApiGroup\"")
-        expect(apiCode).toContain("import * as HttpApiSchema from \"@effect/platform/HttpApiSchema\"")
-        expect(apiCode).toContain("import * as Schema from \"effect/Schema\"")
+        expect(apiCode,).toContain('import * as HttpApi from "@effect/platform/HttpApi"',)
+        expect(apiCode,).toContain('import * as HttpApiEndpoint from "@effect/platform/HttpApiEndpoint"',)
+        expect(apiCode,).toContain('import * as HttpApiGroup from "@effect/platform/HttpApiGroup"',)
+        expect(apiCode,).toContain('import * as HttpApiSchema from "@effect/platform/HttpApiSchema"',)
+        expect(apiCode,).toContain('import * as Schema from "effect/Schema"',)
 
         // Verify all operations are present
-        expect(apiCode).toContain("HttpApiEndpoint.get(\"getUsers\")")
-        expect(apiCode).toContain("HttpApiEndpoint.post(\"createUser\")")
-        expect(apiCode).toContain("HttpApiEndpoint.get(\"getUser\")")
-        expect(apiCode).toContain("HttpApiEndpoint.put(\"updateUser\")")
-        expect(apiCode).toContain("HttpApiEndpoint.delete(\"deleteUser\")")
+        expect(apiCode,).toContain('HttpApiEndpoint.get("getUsers")',)
+        expect(apiCode,).toContain('HttpApiEndpoint.post("createUser")',)
+        expect(apiCode,).toContain('HttpApiEndpoint.get("getUser")',)
+        expect(apiCode,).toContain('HttpApiEndpoint.put("updateUser")',)
+        expect(apiCode,).toContain('HttpApiEndpoint.delete("deleteUser")',)
 
         // Verify path parameters are handled correctly
-        expect(apiCode).toContain("HttpApiSchema.param(\"userId\"")
-        expect(apiCode).toContain("`/users/${")
+        expect(apiCode,).toContain('HttpApiSchema.param("userId"',)
+        expect(apiCode,).toContain('`/users/${',)
 
         // Verify group is created
-        expect(apiCode).toContain("HttpApiGroup.make(\"Users\")")
+        expect(apiCode,).toContain('HttpApiGroup.make("Users")',)
 
         // Verify API is exported
-        expect(apiCode).toContain("const SimpleCRUDAPI = HttpApi.make(\"SimpleCRUDAPI\")")
-        expect(apiCode).toContain(".add(UsersGroup)")
-        expect(apiCode).toContain("export { SimpleCRUDAPI }")
+        expect(apiCode,).toContain('const SimpleCRUDAPI = HttpApi.make("SimpleCRUDAPI")',)
+        expect(apiCode,).toContain('.add(UsersGroup)',)
+        expect(apiCode,).toContain('export { SimpleCRUDAPI }',)
 
         // Emit final code with header
-        const finalCode = yield* CodeEmitter.emit(apiCode)
+        const finalCode = yield* CodeEmitter.emit(apiCode,)
 
-        expect(finalCode).toContain("/**")
-        expect(finalCode).toContain("Generated by @effect/openapi-server-gen")
-        expect(finalCode).toContain("DO NOT EDIT")
-      }))
+        expect(finalCode,).toContain('/**',)
+        expect(finalCode,).toContain('Generated by @effect/openapi-server-gen',)
+        expect(finalCode,).toContain('DO NOT EDIT',)
+      },))
 
-    it("should handle request bodies with schemas", () =>
+    it('should handle request bodies with schemas', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
-        const spec = yield* OpenApiParser.parse(specContent)
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const specContent = readFixture('simple-crud.yaml',)
+        const spec = yield* OpenApiParser.parse(specContent,)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
         // Verify request body schema generation
-        expect(apiCode).toContain("Schema.Struct({")
-        expect(apiCode).toContain("name: Schema.String")
-        expect(apiCode).toContain("email: Schema.optional(Schema.String)")
+        expect(apiCode,).toContain('Schema.Struct({',)
+        expect(apiCode,).toContain('name: Schema.String',)
+        expect(apiCode,).toContain('email: Schema.optional(Schema.String)',)
 
         // Verify setPayload is called
-        expect(apiCode).toContain(".setPayload(")
-      }))
+        expect(apiCode,).toContain('.setPayload(',)
+      },))
 
-    it("should handle response schemas", () =>
+    it('should handle response schemas', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
-        const spec = yield* OpenApiParser.parse(specContent)
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const specContent = readFixture('simple-crud.yaml',)
+        const spec = yield* OpenApiParser.parse(specContent,)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
         // Verify response schema generation
-        expect(apiCode).toContain(".addSuccess(")
-        expect(apiCode).toContain("id: Schema.Number")
-      }))
+        expect(apiCode,).toContain('.addSuccess(',)
+        expect(apiCode,).toContain('id: Schema.Number',)
+      },))
 
-    it("should handle query parameters", () =>
+    it('should handle query parameters', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
-        const spec = yield* OpenApiParser.parse(specContent)
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const specContent = readFixture('simple-crud.yaml',)
+        const spec = yield* OpenApiParser.parse(specContent,)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
         // The simple-crud.yaml doesn't have query params, but we verify
         // the structure is correct for path params at least
-        expect(apiCode).toContain("HttpApiSchema.param(\"userId\"")
-      }))
+        expect(apiCode,).toContain('HttpApiSchema.param("userId"',)
+      },))
   })
 
-  describe("minimal-api.yaml", () => {
-    it("should generate code from minimal valid spec", () =>
+  describe('minimal-api.yaml', () => {
+    it('should generate code from minimal valid spec', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("minimal-api.yaml")
+        const specContent = readFixture('minimal-api.yaml',)
 
         // Parse the spec
-        const spec = yield* OpenApiParser.parse(specContent)
+        const spec = yield* OpenApiParser.parse(specContent,)
 
-        expect(spec.info.title).toBe("Minimal API")
-        expect(Object.keys(spec.paths)).toHaveLength(1)
+        expect(spec.info.title,).toBe('Minimal API',)
+        expect(Object.keys(spec.paths,),).toHaveLength(1,)
 
         // Generate API code
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
         // Verify single endpoint
-        expect(apiCode).toContain("HttpApiEndpoint.get(\"healthCheck\")")
-        expect(apiCode).toContain("\"/health\"")
+        expect(apiCode,).toContain('HttpApiEndpoint.get("healthCheck")',)
+        expect(apiCode,).toContain('"/health"',)
 
         // Verify default group (no tags)
-        expect(apiCode).toContain("HttpApiGroup.make(\"Default\")")
+        expect(apiCode,).toContain('HttpApiGroup.make("Default")',)
 
         // Verify API
-        expect(apiCode).toContain("const MinimalAPI = HttpApi.make(\"MinimalAPI\")")
-        expect(apiCode).toContain(".add(DefaultGroup)")
+        expect(apiCode,).toContain('const MinimalAPI = HttpApi.make("MinimalAPI")',)
+        expect(apiCode,).toContain('.add(DefaultGroup)',)
 
         // Emit final code
-        const finalCode = yield* CodeEmitter.emit(apiCode)
-        expect(finalCode).toContain("DO NOT EDIT")
-      }))
+        const finalCode = yield* CodeEmitter.emit(apiCode,)
+        expect(finalCode,).toContain('DO NOT EDIT',)
+      },))
 
-    it("should use default group when no tags present", () =>
+    it('should use default group when no tags present', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("minimal-api.yaml")
-        const spec = yield* OpenApiParser.parse(specContent)
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const specContent = readFixture('minimal-api.yaml',)
+        const spec = yield* OpenApiParser.parse(specContent,)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
-        expect(apiCode).toContain("const DefaultGroup = HttpApiGroup.make(\"Default\")")
-      }))
+        expect(apiCode,).toContain('const DefaultGroup = HttpApiGroup.make("Default")',)
+      },))
   })
 
-  describe("no-operation-id.yaml", () => {
-    it("should fail with clear error when operationId is missing", () =>
+  describe('no-operation-id.yaml', () => {
+    it('should fail with clear error when operationId is missing', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("no-operation-id.yaml")
+        const specContent = readFixture('no-operation-id.yaml',)
 
         // Parsing should fail
-        const result = yield* Effect.either(OpenApiParser.parse(specContent))
+        const result = yield* Effect.either(OpenApiParser.parse(specContent,),)
 
-        expect(result._tag).toBe("Left")
-        if (result._tag === "Left") {
-          expect(result.left.message).toContain("operationId")
-          expect(result.left.message).toContain("required")
+        expect(result._tag,).toBe('Left',)
+        if (result._tag === 'Left') {
+          expect(result.left.message,).toContain('operationId',)
+          expect(result.left.message,).toContain('required',)
         }
-      }))
+      },))
   })
 
-  describe("Generated code validity", () => {
-    it("should produce syntactically valid TypeScript", () =>
+  describe('Generated code validity', () => {
+    it('should produce syntactically valid TypeScript', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
-        const spec = yield* OpenApiParser.parse(specContent)
-        const apiCode = yield* ApiGenerator.generateApi(spec)
-        const finalCode = yield* CodeEmitter.emit(apiCode)
+        const specContent = readFixture('simple-crud.yaml',)
+        const spec = yield* OpenApiParser.parse(specContent,)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
+        const finalCode = yield* CodeEmitter.emit(apiCode,)
 
         // Basic syntax checks
-        expect(finalCode).not.toContain("undefined")
-        expect(finalCode).not.toContain("[object Object]")
+        expect(finalCode,).not.toContain('undefined',)
+        expect(finalCode,).not.toContain('[object Object]',)
 
         // Verify proper structure
-        const importCount = (finalCode.match(/^import /gm) || []).length
-        expect(importCount).toBeGreaterThan(0)
+        const importCount = (finalCode.match(/^import /gm,) || []).length
+        expect(importCount,).toBeGreaterThan(0,)
 
-        const exportCount = (finalCode.match(/^export /gm) || []).length
-        expect(exportCount).toBeGreaterThan(0)
-      }))
+        const exportCount = (finalCode.match(/^export /gm,) || []).length
+        expect(exportCount,).toBeGreaterThan(0,)
+      },))
 
-    it("should include all required imports", () =>
+    it('should include all required imports', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
-        const spec = yield* OpenApiParser.parse(specContent)
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const specContent = readFixture('simple-crud.yaml',)
+        const spec = yield* OpenApiParser.parse(specContent,)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
         const requiredImports = [
-          "@effect/platform/HttpApi",
-          "@effect/platform/HttpApiEndpoint",
-          "@effect/platform/HttpApiGroup",
-          "@effect/platform/HttpApiSchema",
-          "effect/Schema"
+          '@effect/platform/HttpApi',
+          '@effect/platform/HttpApiEndpoint',
+          '@effect/platform/HttpApiGroup',
+          '@effect/platform/HttpApiSchema',
+          'effect/Schema',
         ]
 
         for (const importPath of requiredImports) {
-          expect(apiCode).toContain(`from "${importPath}"`)
+          expect(apiCode,).toContain(`from "${importPath}"`,)
         }
-      }))
+      },))
 
-    it("should not contain duplicate definitions", () =>
+    it('should not contain duplicate definitions', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
-        const spec = yield* OpenApiParser.parse(specContent)
-        const apiCode = yield* ApiGenerator.generateApi(spec)
+        const specContent = readFixture('simple-crud.yaml',)
+        const spec = yield* OpenApiParser.parse(specContent,)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
 
         // Check that each operation ID appears only once as an endpoint definition
-        const getUsers = apiCode.match(/HttpApiEndpoint\.get\("getUsers"\)/g)
-        expect(getUsers).toHaveLength(1)
+        const getUsers = apiCode.match(/HttpApiEndpoint\.get\("getUsers"\)/g,)
+        expect(getUsers,).toHaveLength(1,)
 
-        const createUser = apiCode.match(/HttpApiEndpoint\.post\("createUser"\)/g)
-        expect(createUser).toHaveLength(1)
-      }))
+        const createUser = apiCode.match(/HttpApiEndpoint\.post\("createUser"\)/g,)
+        expect(createUser,).toHaveLength(1,)
+      },))
   })
 
-  describe("Complete pipeline", () => {
-    it("should successfully run the entire generation pipeline", () =>
+  describe('Complete pipeline', () => {
+    it('should successfully run the entire generation pipeline', () =>
       Effect.gen(function*() {
-        const specContent = readFixture("simple-crud.yaml")
+        const specContent = readFixture('simple-crud.yaml',)
 
         // Step 1: Parse
-        const spec = yield* OpenApiParser.parse(specContent)
-        expect(spec.openapi).toBe("3.1.0")
+        const spec = yield* OpenApiParser.parse(specContent,)
+        expect(spec.openapi,).toBe('3.1.0',)
 
         // Step 2: Generate API code
-        const apiCode = yield* ApiGenerator.generateApi(spec)
-        expect(apiCode.length).toBeGreaterThan(0)
+        const apiCode = yield* ApiGenerator.generateApi(spec,)
+        expect(apiCode.length,).toBeGreaterThan(0,)
 
         // Step 3: Emit final code
-        const finalCode = yield* CodeEmitter.emit(apiCode)
-        expect(finalCode).toContain("/**")
-        expect(finalCode).toContain(apiCode)
+        const finalCode = yield* CodeEmitter.emit(apiCode,)
+        expect(finalCode,).toContain('/**',)
+        expect(finalCode,).toContain(apiCode,)
 
         // Verify the pipeline produces complete output
-        expect(finalCode).toContain("import")
-        expect(finalCode).toContain("export")
-        expect(finalCode).toContain("HttpApi.make")
-      }))
+        expect(finalCode,).toContain('import',)
+        expect(finalCode,).toContain('export',)
+        expect(finalCode,).toContain('HttpApi.make',)
+      },))
   })
 })

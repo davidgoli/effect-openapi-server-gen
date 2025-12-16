@@ -1,8 +1,8 @@
 /**
  * @since 1.0.0
  */
-import * as Effect from "effect/Effect"
-import type * as OpenApiParser from "./OpenApiParser.js"
+import * as Effect from 'effect/Effect'
+import type * as OpenApiParser from './OpenApiParser.js'
 
 /**
  * Registry of schema definitions from components/schemas
@@ -21,17 +21,17 @@ export interface SchemaRegistry {
  * @category Parsing
  */
 export const parseComponents = (
-  spec: OpenApiParser.OpenApiSpec
+  spec: OpenApiParser.OpenApiSpec,
 ): Effect.Effect<SchemaRegistry> =>
   Effect.sync(() => {
     const schemas = new Map<string, OpenApiParser.SchemaObject>()
 
     // Check if spec has components and schemas
     if (spec.components?.schemas) {
-      for (const [name, schema] of Object.entries(spec.components.schemas)) {
-        schemas.set(name, schema)
+      for (const [name, schema,] of Object.entries(spec.components.schemas,)) {
+        schemas.set(name, schema,)
       }
     }
 
-    return { schemas }
-  })
+    return { schemas, }
+  },)

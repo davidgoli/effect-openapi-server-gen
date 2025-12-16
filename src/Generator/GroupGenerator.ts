@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
-import * as Effect from "effect/Effect"
-import type * as PathParser from "../Parser/PathParser.js"
-import * as EndpointGenerator from "./EndpointGenerator.js"
-import type * as SchemaGenerator from "./SchemaGenerator.js"
+import * as Effect from 'effect/Effect'
+import type * as PathParser from '../Parser/PathParser.js'
+import * as EndpointGenerator from './EndpointGenerator.js'
+import type * as SchemaGenerator from './SchemaGenerator.js'
 
 /**
  * @since 1.0.0
@@ -21,32 +21,32 @@ export interface OperationGroup {
  * Sanitize a string to be a valid JavaScript identifier (camelCase)
  * Handles kebab-case, spaces, and special characters
  */
-const sanitizeIdentifier = (name: string): string => {
+const sanitizeIdentifier = (name: string,): string => {
   // Replace non-alphanumeric characters with spaces, then split
-  const parts = name.replace(/[^a-zA-Z0-9]+/g, " ").trim().split(/\s+/)
+  const parts = name.replace(/[^a-zA-Z0-9]+/g, ' ',).trim().split(/\s+/,)
 
   // Convert to camelCase
   return parts
-    .map((part, index) => {
+    .map((part, index,) => {
       if (index === 0) {
         // First part: lowercase
-        return part.charAt(0).toLowerCase() + part.slice(1)
+        return part.charAt(0,).toLowerCase() + part.slice(1,)
       } else {
         // Subsequent parts: capitalize first letter
-        return part.charAt(0).toUpperCase() + part.slice(1)
+        return part.charAt(0,).toUpperCase() + part.slice(1,)
       }
-    })
-    .join("")
+    },)
+    .join('',)
 }
 
 /**
  * Capitalize group name (handle kebab-case)
  */
-const capitalizeGroupName = (name: string): string => {
+const capitalizeGroupName = (name: string,): string => {
   return name
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")
+    .split('-',)
+    .map((part,) => part.charAt(0,).toUpperCase() + part.slice(1,))
+    .join('',)
 }
 
 /**
@@ -56,34 +56,34 @@ const capitalizeGroupName = (name: string): string => {
  * @category Grouping
  */
 export const generateGroups = (
-  operations: ReadonlyArray<PathParser.ParsedOperation>
+  operations: ReadonlyArray<PathParser.ParsedOperation>,
 ): Effect.Effect<ReadonlyArray<OperationGroup>> =>
   Effect.sync(() => {
     const groupMap = new Map<string, Array<PathParser.ParsedOperation>>()
 
     for (const operation of operations) {
-      const groupName = operation.tags.length > 0 ? operation.tags[0] : "default"
+      const groupName = operation.tags.length > 0 ? operation.tags[0] : 'default'
 
-      if (!groupMap.has(groupName)) {
-        groupMap.set(groupName, [])
+      if (!groupMap.has(groupName,)) {
+        groupMap.set(groupName, [],)
       }
 
-      groupMap.get(groupName)!.push(operation)
+      groupMap.get(groupName,)!.push(operation,)
     }
 
     const groups: Array<OperationGroup> = []
 
-    for (const [name, ops] of groupMap.entries()) {
+    for (const [name, ops,] of groupMap.entries()) {
       groups.push({
         name,
-        varName: sanitizeIdentifier(name),
-        capitalizedName: capitalizeGroupName(name),
-        operations: ops
-      })
+        varName: sanitizeIdentifier(name,),
+        capitalizedName: capitalizeGroupName(name,),
+        operations: ops,
+      },)
     }
 
     return groups
-  })
+  },)
 
 /**
  * Generate HttpApiGroup code for a group of operations
@@ -92,7 +92,7 @@ export const generateGroups = (
  * @category Generation
  */
 export const generateGroupCode = (
-  group: OperationGroup
+  group: OperationGroup,
 ): Effect.Effect<string, SchemaGenerator.SchemaGenerationError> =>
   Effect.gen(function*() {
     const lines: Array<string> = []
@@ -102,39 +102,39 @@ export const generateGroupCode = (
     const declaredParams = new Set<string>()
 
     for (const operation of group.operations) {
-      const generated = yield* EndpointGenerator.generateEndpoint(operation)
+      const generated = yield* EndpointGenerator.generateEndpoint(operation,)
       const varName = operation.operationId
 
       // Add path parameter declarations first (only if not already declared)
       for (const paramDecl of generated.pathParamDeclarations) {
         // Extract the parameter variable name from the declaration
         // e.g., "const userIdParam = ..." -> "userIdParam"
-        const match = paramDecl.match(/^const\s+(\w+)\s+=/)
+        const match = paramDecl.match(/^const\s+(\w+)\s+=/,)
         if (match) {
           const paramVarName = match[1]
-          if (!declaredParams.has(paramVarName)) {
-            lines.push(paramDecl)
-            lines.push("")
-            declaredParams.add(paramVarName)
+          if (!declaredParams.has(paramVarName,)) {
+            lines.push(paramDecl,)
+            lines.push('',)
+            declaredParams.add(paramVarName,)
           }
         }
       }
 
       // Then add the endpoint definition (exported)
-      lines.push(`export const ${varName} = ${generated.endpointCode}`)
-      lines.push("")
-      endpointVars.push(varName)
+      lines.push(`export const ${varName} = ${generated.endpointCode}`,)
+      lines.push('',)
+      endpointVars.push(varName,)
     }
 
     // Generate the group definition (exported)
     // Use the sanitized variable name from the group
-    let groupCode = `export const ${group.varName}Group = HttpApiGroup.make("${group.name}")`
+    let groupCode = `export const ${group.varName}Group = HttpApiGroup.make('${group.name}')`
 
     for (const varName of endpointVars) {
       groupCode += `\n  .add(${varName})`
     }
 
-    lines.push(groupCode)
+    lines.push(groupCode,)
 
-    return lines.join("\n")
-  })
+    return lines.join('\n',)
+  },)

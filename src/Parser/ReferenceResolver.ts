@@ -1,9 +1,9 @@
 /**
  * @since 1.0.0
  */
-import * as Effect from "effect/Effect"
-import type * as OpenApiParser from "./OpenApiParser.js"
-import type * as SchemaParser from "./SchemaParser.js"
+import * as Effect from 'effect/Effect'
+import type * as OpenApiParser from './OpenApiParser.js'
+import type * as SchemaParser from './SchemaParser.js'
 
 /**
  * Error when resolving references
@@ -12,8 +12,8 @@ import type * as SchemaParser from "./SchemaParser.js"
  * @category Errors
  */
 export class ReferenceResolutionError {
-  readonly _tag = "ReferenceResolutionError"
-  constructor(readonly message: string) {}
+  readonly _tag = 'ReferenceResolutionError'
+  constructor(readonly message: string,) {}
 }
 
 /**
@@ -23,7 +23,7 @@ export class ReferenceResolutionError {
  * @category Models
  */
 export interface ParsedRef {
-  readonly type: "component"
+  readonly type: 'component'
   readonly schemaName: string
 }
 
@@ -33,23 +33,23 @@ export interface ParsedRef {
  * @since 1.0.0
  * @category Parsing
  */
-export const parseRefString = (ref: string): Effect.Effect<ParsedRef, ReferenceResolutionError> =>
+export const parseRefString = (ref: string,): Effect.Effect<ParsedRef, ReferenceResolutionError> =>
   Effect.sync(() => {
     // Expected format: #/components/schemas/SchemaName
-    const match = ref.match(/^#\/components\/schemas\/(.+)$/)
+    const match = ref.match(/^#\/components\/schemas\/(.+)$/,)
 
     if (!match) {
-      throw new ReferenceResolutionError(`Invalid $ref format: ${ref}`)
+      throw new ReferenceResolutionError(`Invalid $ref format: ${ref}`,)
     }
 
     return {
-      type: "component" as const,
-      schemaName: match[1]
+      type: 'component' as const,
+      schemaName: match[1],
     }
-  }).pipe(
-    Effect.catchAll((error: unknown) =>
-      Effect.fail(new ReferenceResolutionError(error instanceof Error ? error.message : String(error)))
-    )
+  },).pipe(
+    Effect.catchAll((error: unknown,) =>
+      Effect.fail(new ReferenceResolutionError(error instanceof Error ? error.message : String(error,),),)
+    ),
   )
 
 /**
@@ -61,7 +61,7 @@ export const parseRefString = (ref: string): Effect.Effect<ParsedRef, ReferenceR
 export const resolveSchema = (
   schema: OpenApiParser.SchemaObject,
   registry: SchemaParser.SchemaRegistry,
-  visited: ReadonlySet<string> = new Set()
+  visited: ReadonlySet<string> = new Set(),
 ): Effect.Effect<OpenApiParser.SchemaObject, ReferenceResolutionError> =>
   Effect.gen(function*() {
     // If no $ref, check for nested $refs in properties and items
@@ -70,11 +70,11 @@ export const resolveSchema = (
       if (schema.properties) {
         const resolvedProperties: Record<string, OpenApiParser.SchemaObject> = {}
 
-        for (const [key, propSchema] of Object.entries(schema.properties)) {
+        for (const [key, propSchema,] of Object.entries(schema.properties,)) {
           if (propSchema.$ref) {
             // Check if this would create a circular reference
-            const parsed = yield* parseRefString(propSchema.$ref)
-            if (visited.has(parsed.schemaName)) {
+            const parsed = yield* parseRefString(propSchema.$ref,)
+            if (visited.has(parsed.schemaName,)) {
               // Preserve the $ref for circular references
               resolvedProperties[key] = propSchema
             } else {
@@ -82,29 +82,29 @@ export const resolveSchema = (
               resolvedProperties[key] = yield* resolveSchema(
                 propSchema,
                 registry,
-                visited
+                visited,
               )
             }
           } else {
             // Recursively resolve nested schemas
-            resolvedProperties[key] = yield* resolveSchema(propSchema, registry, visited)
+            resolvedProperties[key] = yield* resolveSchema(propSchema, registry, visited,)
           }
         }
 
-        return { ...schema, properties: resolvedProperties }
+        return { ...schema, properties: resolvedProperties, }
       }
 
       // Check if schema is an array with $ref items
-      if (schema.type === "array" && schema.items?.$ref) {
-        const parsed = yield* parseRefString(schema.items.$ref)
+      if (schema.type === 'array' && schema.items?.$ref) {
+        const parsed = yield* parseRefString(schema.items.$ref,)
 
-        if (visited.has(parsed.schemaName)) {
+        if (visited.has(parsed.schemaName,)) {
           // Preserve the $ref for circular references
           return schema
         }
 
-        const resolvedItems = yield* resolveSchema(schema.items, registry, visited)
-        return { ...schema, items: resolvedItems }
+        const resolvedItems = yield* resolveSchema(schema.items, registry, visited,)
+        return { ...schema, items: resolvedItems, }
       }
 
       // Return schema as-is
@@ -112,26 +112,26 @@ export const resolveSchema = (
     }
 
     // Parse the $ref
-    const parsed = yield* parseRefString(schema.$ref)
+    const parsed = yield* parseRefString(schema.$ref,)
 
     // Check if we're in a circular reference
-    if (visited.has(parsed.schemaName)) {
+    if (visited.has(parsed.schemaName,)) {
       // Return the schema with $ref preserved for later handling
       return schema
     }
 
     // Look up the schema in the registry
-    const referencedSchema = registry.schemas.get(parsed.schemaName)
+    const referencedSchema = registry.schemas.get(parsed.schemaName,)
 
     if (!referencedSchema) {
       return yield* Effect.fail(
-        new ReferenceResolutionError(`Schema not found: ${parsed.schemaName}`)
+        new ReferenceResolutionError(`Schema not found: ${parsed.schemaName}`,),
       )
     }
 
     // Add this schema to visited set
-    const newVisited = new Set(visited).add(parsed.schemaName)
+    const newVisited = new Set(visited,).add(parsed.schemaName,)
 
     // Recursively resolve the referenced schema
-    return yield* resolveSchema(referencedSchema, registry, newVisited)
-  })
+    return yield* resolveSchema(referencedSchema, registry, newVisited,)
+  },)

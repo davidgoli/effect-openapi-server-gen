@@ -109,8 +109,8 @@ export default [
           indentWidth: 2,
           lineWidth: 120,
           semiColons: "asi",
-          quoteStyle: "alwaysDouble",
-          trailingCommas: "never",
+          quoteStyle: "preferSingle",
+          trailingCommas: "always",
           operatorPosition: "maintain",
           "arrowFunction.useParentheses": "force"
         }
