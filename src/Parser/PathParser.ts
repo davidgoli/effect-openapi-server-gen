@@ -20,15 +20,15 @@ export interface ParsedOperation {
   readonly headerParameters: ReadonlyArray<OpenApiParser.ParameterObject>
   readonly requestBody?:
     | {
-        readonly schema: OpenApiParser.SchemaObject
-        readonly required: boolean
-      }
+      readonly schema: OpenApiParser.SchemaObject
+      readonly required: boolean
+    }
     | undefined
   readonly successResponse?:
     | {
-        readonly statusCode: string
-        readonly schema: OpenApiParser.SchemaObject
-      }
+      readonly statusCode: string
+      readonly schema: OpenApiParser.SchemaObject
+    }
     | undefined
 }
 
