@@ -24,12 +24,10 @@ export interface ParsedOperation {
       readonly required: boolean
     }
     | undefined
-  readonly successResponse?:
-    | {
-      readonly statusCode: string
-      readonly schema: OpenApiParser.SchemaObject
-    }
-    | undefined
+  readonly responses: ReadonlyArray<{
+    readonly statusCode: string
+    readonly schema: OpenApiParser.SchemaObject
+  }>
 }
 
 /**
@@ -76,18 +74,15 @@ export const extractOperations = (
           }
         }
 
-        // Extract success response (first 2xx response)
-        let successResponse: ParsedOperation["successResponse"] | undefined
+        // Extract all responses with schemas
+        const responses: Array<{ statusCode: string; schema: OpenApiParser.SchemaObject }> = []
         for (const [statusCode, response] of Object.entries(operation.responses)) {
-          if (statusCode.startsWith("2")) {
-            const content = response.content?.["application/json"]
-            if (content?.schema) {
-              successResponse = {
-                statusCode,
-                schema: content.schema
-              }
-              break
-            }
+          const content = response.content?.["application/json"]
+          if (content?.schema) {
+            responses.push({
+              statusCode,
+              schema: content.schema
+            })
           }
         }
 
@@ -102,7 +97,7 @@ export const extractOperations = (
           queryParameters,
           headerParameters,
           requestBody,
-          successResponse
+          responses
         })
       }
     }

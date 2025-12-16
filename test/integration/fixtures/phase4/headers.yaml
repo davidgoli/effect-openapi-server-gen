@@ -1,0 +1,145 @@
+openapi: 3.1.0
+info:
+  title: Request Headers Test API
+  description: Test request header handling
+  version: 1.0.0
+
+paths:
+  /api/data:
+    get:
+      operationId: getData
+      tags:
+        - data
+      summary: Get data with custom headers
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9]{32}$
+          description: API key for authentication
+        - name: X-Request-ID
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional request tracking ID
+        - name: X-Client-Version
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: ^\d+\.\d+\.\d+$
+          description: Client version (semver)
+      responses:
+        '200':
+          description: Data response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+                required:
+                  - data
+
+  /api/upload:
+    post:
+      operationId: uploadData
+      tags:
+        - data
+      summary: Upload data with content type header
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            enum:
+              - application/json
+              - application/xml
+          description: Content type of the request
+        - name: Content-Encoding
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - gzip
+              - deflate
+              - identity
+          description: Content encoding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payload:
+                  type: string
+              required:
+                - payload
+      responses:
+        '201':
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                required:
+                  - id
+                  - status
+
+  /api/conditional:
+    get:
+      operationId: getConditional
+      tags:
+        - data
+      summary: Conditional GET with ETag and modified headers
+      parameters:
+        - name: If-None-Match
+          in: header
+          required: false
+          schema:
+            type: string
+          description: ETag value for conditional requests
+        - name: If-Modified-Since
+          in: header
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Modified since timestamp
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/json
+          description: Acceptable content types
+      responses:
+        '200':
+          description: Resource content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+                  etag:
+                    type: string
+                required:
+                  - content
+                  - etag
+        '304':
+          description: Not modified

@@ -141,13 +141,15 @@ describe("EndpointGenerator", () => {
           pathParameters: [],
           queryParameters: [],
           headerParameters: [],
-          successResponse: {
-            statusCode: "200",
-            schema: {
-              type: "array",
-              items: { type: "object" }
+          responses: [
+            {
+              statusCode: "200",
+              schema: {
+                type: "array",
+                items: { type: "object" }
+              }
             }
-          }
+          ]
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -188,6 +190,163 @@ describe("EndpointGenerator", () => {
         expect(result.endpointCode).toContain("limit: Schema.Number")
       }))
 
+    it("should add setHeaders for header parameters", () =>
+      Effect.gen(function*() {
+        const operation: PathParser.ParsedOperation = {
+          operationId: "getData",
+          method: "get",
+          path: "/api/data",
+          tags: [],
+          pathParameters: [],
+          queryParameters: [],
+          headerParameters: [
+            {
+              name: "X-API-Key",
+              in: "header",
+              required: true,
+              schema: { type: "string" }
+            },
+            {
+              name: "X-Request-ID",
+              in: "header",
+              required: false,
+              schema: { type: "string", format: "uuid" }
+            }
+          ]
+        }
+
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
+
+        expect(result.endpointCode).toContain(".setHeaders(")
+        expect(result.endpointCode).toContain("Schema.Struct")
+        expect(result.endpointCode).toContain("\"X-API-Key\": Schema.String")
+        expect(result.endpointCode).toContain("\"X-Request-ID\": Schema.optional(Schema.String)")
+      }))
+
+    it("should apply validation rules to query parameters", () =>
+      Effect.gen(function*() {
+        const operation: PathParser.ParsedOperation = {
+          operationId: "searchUsers",
+          method: "get",
+          path: "/users",
+          tags: [],
+          pathParameters: [],
+          queryParameters: [
+            {
+              name: "search",
+              in: "query",
+              required: true,
+              schema: {
+                type: "string",
+                minLength: 3,
+                maxLength: 50
+              }
+            },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: {
+                type: "integer",
+                minimum: 1,
+                maximum: 100
+              }
+            }
+          ],
+          headerParameters: []
+        }
+
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
+
+        expect(result.endpointCode).toContain(".setUrlParams(")
+        expect(result.endpointCode).toContain("search: Schema.String.pipe(Schema.minLength(3), Schema.maxLength(50))")
+        expect(result.endpointCode).toContain(
+          "limit: Schema.optional(Schema.Number.pipe(Schema.greaterThanOrEqualTo(1), Schema.lessThanOrEqualTo(100)))"
+        )
+      }))
+
+    it("should handle multiple response status codes", () =>
+      Effect.gen(function*() {
+        const operation: PathParser.ParsedOperation = {
+          operationId: "createUser",
+          method: "post",
+          path: "/users",
+          tags: [],
+          pathParameters: [],
+          queryParameters: [],
+          headerParameters: [],
+          requestBody: {
+            schema: { type: "object" },
+            required: true
+          },
+          responses: [
+            {
+              statusCode: "201",
+              schema: {
+                type: "object",
+                properties: {
+                  id: { type: "string" }
+                }
+              }
+            },
+            {
+              statusCode: "400",
+              schema: {
+                type: "object",
+                properties: {
+                  error: { type: "string" }
+                }
+              }
+            },
+            {
+              statusCode: "409",
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string" }
+                }
+              }
+            }
+          ]
+        }
+
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
+
+        expect(result.endpointCode).toContain(".addSuccess(")
+        expect(result.endpointCode).toContain("{ status: 201 }")
+        expect(result.endpointCode).toContain(".addError(")
+        expect(result.endpointCode).toContain("{ status: 400 }")
+        expect(result.endpointCode).toContain("{ status: 409 }")
+      }))
+
+    it("should use default status for 200 response", () =>
+      Effect.gen(function*() {
+        const operation: PathParser.ParsedOperation = {
+          operationId: "getUsers",
+          method: "get",
+          path: "/users",
+          tags: [],
+          pathParameters: [],
+          queryParameters: [],
+          headerParameters: [],
+          responses: [
+            {
+              statusCode: "200",
+              schema: {
+                type: "array",
+                items: { type: "object" }
+              }
+            }
+          ]
+        }
+
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
+
+        // For 200, we don't need to specify status
+        expect(result.endpointCode).toContain(".addSuccess(Schema.Array(Schema.Struct({})))")
+        expect(result.endpointCode).not.toContain("{ status: 200 }")
+      }))
+
     it("should handle endpoint with all features", () =>
       Effect.gen(function*() {
         const operation: PathParser.ParsedOperation = {
@@ -221,10 +380,12 @@ describe("EndpointGenerator", () => {
             },
             required: true
           },
-          successResponse: {
-            statusCode: "200",
-            schema: { type: "object" }
-          }
+          responses: [
+            {
+              statusCode: "200",
+              schema: { type: "object" }
+            }
+          ]
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)

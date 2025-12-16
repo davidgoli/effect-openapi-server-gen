@@ -1,0 +1,276 @@
+openapi: 3.1.0
+info:
+  title: Error Responses Test API
+  description: Test error handling patterns
+  version: 1.0.0
+
+paths:
+  /auth/login:
+    post:
+      operationId: login
+      tags:
+        - auth
+      summary: Login with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expiresIn:
+                    type: integer
+                required:
+                  - token
+                  - expiresIn
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationError'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /resources/{resourceId}:
+    get:
+      operationId: getResource
+      tags:
+        - resources
+      summary: Get a resource by ID
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resource found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          description: Access forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+
+    put:
+      operationId: updateResource
+      tags:
+        - resources
+      summary: Update a resource
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceUpdate'
+      responses:
+        '200':
+          description: Resource updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        '422':
+          description: Business logic error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessLogicError'
+
+components:
+  schemas:
+    Resource:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        data:
+          type: object
+      required:
+        - id
+        - name
+
+    ResourceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        data:
+          type: object
+      required:
+        - name
+
+    AuthenticationError:
+      type: object
+      properties:
+        _tag:
+          type: string
+          const: AuthenticationError
+        message:
+          type: string
+        code:
+          type: string
+          const: INVALID_CREDENTIALS
+      required:
+        - _tag
+        - message
+        - code
+
+    RateLimitError:
+      type: object
+      properties:
+        _tag:
+          type: string
+          const: RateLimitError
+        message:
+          type: string
+        code:
+          type: string
+          const: RATE_LIMIT_EXCEEDED
+        retryAfter:
+          type: integer
+          description: Seconds until retry is allowed
+      required:
+        - _tag
+        - message
+        - code
+        - retryAfter
+
+    ForbiddenError:
+      type: object
+      properties:
+        _tag:
+          type: string
+          const: ForbiddenError
+        message:
+          type: string
+        code:
+          type: string
+          const: ACCESS_DENIED
+        resource:
+          type: string
+      required:
+        - _tag
+        - message
+        - code
+        - resource
+
+    NotFoundError:
+      type: object
+      properties:
+        _tag:
+          type: string
+          const: NotFoundError
+        message:
+          type: string
+        code:
+          type: string
+          const: RESOURCE_NOT_FOUND
+        resourceId:
+          type: string
+      required:
+        - _tag
+        - message
+        - code
+        - resourceId
+
+    ValidationError:
+      type: object
+      properties:
+        _tag:
+          type: string
+          const: ValidationError
+        message:
+          type: string
+        code:
+          type: string
+          const: VALIDATION_FAILED
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+            required:
+              - field
+              - message
+      required:
+        - _tag
+        - message
+        - code
+        - errors
+
+    BusinessLogicError:
+      type: object
+      properties:
+        _tag:
+          type: string
+          const: BusinessLogicError
+        message:
+          type: string
+        code:
+          type: string
+        reason:
+          type: string
+      required:
+        - _tag
+        - message
+        - code
+        - reason

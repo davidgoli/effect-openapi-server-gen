@@ -79,16 +79,44 @@ export const generateEndpoint = (
       endpointCode += `\n  .setUrlParams(Schema.Struct({\n    ${queryParamProps.join(",\n    ")}\n  }))`
     }
 
+    // Add header parameters
+    if (operation.headerParameters.length > 0) {
+      const headerProps: Array<string> = []
+      for (const param of operation.headerParameters) {
+        const schemaCode = yield* SchemaGenerator.generateSchemaCode(param.schema!)
+        const isRequired = param.required ?? false
+        // Header names should be quoted strings (e.g., "X-API-Key")
+        const propCode = isRequired
+          ? `"${param.name}": ${schemaCode}`
+          : `"${param.name}": Schema.optional(${schemaCode})`
+        headerProps.push(propCode)
+      }
+
+      endpointCode += `\n  .setHeaders(Schema.Struct({\n    ${headerProps.join(",\n    ")}\n  }))`
+    }
+
     // Add request body (payload)
     if (operation.requestBody) {
       const payloadCode = yield* SchemaGenerator.generateSchemaCode(operation.requestBody.schema)
       endpointCode += `\n  .setPayload(${payloadCode})`
     }
 
-    // Add success response
-    if (operation.successResponse) {
-      const responseCode = yield* SchemaGenerator.generateSchemaCode(operation.successResponse.schema)
-      endpointCode += `\n  .addSuccess(${responseCode})`
+    // Add responses (success and error)
+    for (const response of operation.responses) {
+      const statusCode = response.statusCode
+      const responseCode = yield* SchemaGenerator.generateSchemaCode(response.schema)
+
+      if (statusCode.startsWith("2")) {
+        // Success responses (2xx)
+        if (statusCode === "200") {
+          endpointCode += `\n  .addSuccess(${responseCode})`
+        } else {
+          endpointCode += `\n  .addSuccess(${responseCode}, { status: ${statusCode} })`
+        }
+      } else {
+        // Error responses (4xx, 5xx)
+        endpointCode += `\n  .addError(${responseCode}, { status: ${statusCode} })`
+      }
     }
 
     return { pathParamDeclarations, endpointCode }
