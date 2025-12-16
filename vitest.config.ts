@@ -10,8 +10,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@template/basic/test": path.join(__dirname, "test"),
-      "@template/basic": path.join(__dirname, "src")
+      "@effect/openapi-server-gen/test": path.join(__dirname, "test"),
+      "@effect/openapi-server-gen": path.join(__dirname, "src")
     }
   }
 })
