@@ -52,3 +52,8 @@ export * as SchemaParser from './Parser/SchemaParser.js'
  * @since 1.0.0
  */
 export * as SecurityParser from './Parser/SecurityParser.js'
+
+/**
+ * @since 1.0.0
+ */
+export * as ServerParser from './Parser/ServerParser.js'

@@ -31,23 +31,25 @@ export const TodoSchema = Schema.Struct({
   /** Whether the todo is completed */
   completed: Schema.Boolean.annotations({ description: 'Whether the todo is completed' }),
   /** When the todo was created */
-  createdAt: Schema.optional(Schema.String.annotations({ description: 'When the todo was created' }))
+  createdAt: Schema.optional(Schema.String.annotations({ description: 'When the todo was created' })),
 })
 
 export const CreateTodoRequestSchema = Schema.Struct({
   /** The todo item title */
-  title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200)).annotations({ description: 'The todo item title' }),
-  completed: Schema.optional(Schema.Boolean)
+  title: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200)).annotations({
+    description: 'The todo item title',
+  }),
+  completed: Schema.optional(Schema.Boolean),
 })
 
 export const UpdateTodoRequestSchema = Schema.Struct({
   title: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200))),
-  completed: Schema.optional(Schema.Boolean)
+  completed: Schema.optional(Schema.Boolean),
 })
 
 export const ErrorSchema = Schema.Struct({
   message: Schema.optional(Schema.String),
-  code: Schema.optional(Schema.String)
+  code: Schema.optional(Schema.String),
 })
 
 /**
@@ -59,9 +61,11 @@ export const ErrorSchema = Schema.Struct({
  * List all todos
  */
 export const listTodos = HttpApiEndpoint.get('listTodos', '/todos')
-  .setUrlParams(Schema.Struct({
-    completed: Schema.optional(Schema.BooleanFromString)
-  }))
+  .setUrlParams(
+    Schema.Struct({
+      completed: Schema.optional(Schema.BooleanFromString),
+    })
+  )
   .addSuccess(Schema.Array(TodoSchema))
 
 /**
@@ -96,8 +100,9 @@ const deleteTodo_idParam = HttpApiSchema.param('id', Schema.String)
 /**
  * Delete a todo
  */
-export const deleteTodo = HttpApiEndpoint.del('deleteTodo')`/todos/${deleteTodo_idParam}`
-  .addError(ErrorSchema, { status: 404 })
+export const deleteTodo = HttpApiEndpoint.del('deleteTodo')`/todos/${deleteTodo_idParam}`.addError(ErrorSchema, {
+  status: 404,
+})
 
 export const todosGroup = HttpApiGroup.make('Todos')
   .add(listTodos)
@@ -106,5 +111,4 @@ export const todosGroup = HttpApiGroup.make('Todos')
   .add(updateTodo)
   .add(deleteTodo)
 
-export const TodoAPI = HttpApi.make('TodoAPI')
-  .add(todosGroup)
+export const TodoAPI = HttpApi.make('TodoAPI').add(todosGroup)

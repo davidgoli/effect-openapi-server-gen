@@ -156,10 +156,7 @@ const HttpLive = NodeHttpServer.layer(() => Http.createServer(), { port: 3000 })
 /**
  * Serve the API using the HTTP server
  */
-const ServerLive = HttpApiBuilder.serve().pipe(
-  Layer.provide(TodoAPILive),
-  Layer.provide(HttpLive)
-)
+const ServerLive = HttpApiBuilder.serve().pipe(Layer.provide(TodoAPILive), Layer.provide(HttpLive))
 
 /**
  * Main program
@@ -179,9 +176,4 @@ const program = Effect.gen(function* () {
 /**
  * Run the program with all dependencies
  */
-NodeRuntime.runMain(
-  program.pipe(
-    Effect.provide(ServerLive),
-    Effect.provide(TodoStore.Default)
-  )
-)
+NodeRuntime.runMain(program.pipe(Effect.provide(ServerLive), Effect.provide(TodoStore.Default)))
