@@ -30,7 +30,7 @@ const generateJSDoc = (operation: PathParser.ParsedOperation): string | undefine
   const lines: Array<string> = []
 
   // Add summary or description
-  if (operation.summary || operation.description) {
+  if (operation.summary || operation.description || operation.deprecated) {
     lines.push('/**')
     if (operation.summary) {
       lines.push(` * ${operation.summary}`)
@@ -38,6 +38,10 @@ const generateJSDoc = (operation: PathParser.ParsedOperation): string | undefine
     if (operation.description && operation.description !== operation.summary) {
       if (operation.summary) lines.push(' *')
       lines.push(` * ${operation.description}`)
+    }
+    if (operation.deprecated) {
+      if (operation.summary || operation.description) lines.push(' *')
+      lines.push(' * @deprecated This endpoint is deprecated and may be removed in a future version.')
     }
     lines.push(' */')
     return lines.join('\n')
@@ -119,6 +123,23 @@ export const generateEndpoint = (
       }
 
       endpointCode += `\n  .setHeaders(Schema.Struct({\n    ${headerProps.join(',\n    ')}\n  }))`
+    }
+
+    // Add cookie parameters
+    if (operation.cookieParameters.length > 0) {
+      const cookieProps: Array<string> = []
+      for (const param of operation.cookieParameters) {
+        // Cookies are transmitted as strings, so use generateQueryParamSchemaCode
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
+        const isRequired = param.required ?? false
+        // Cookie names should be quoted strings
+        const propCode = isRequired
+          ? `'${param.name}': ${schemaCode}`
+          : `'${param.name}': Schema.optional(${schemaCode})`
+        cookieProps.push(propCode)
+      }
+
+      endpointCode += `\n  .setCookies(Schema.Struct({\n    ${cookieProps.join(',\n    ')}\n  }))`
     }
 
     // Add request body (payload)

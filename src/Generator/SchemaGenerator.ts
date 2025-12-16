@@ -284,11 +284,19 @@ export const generateNamedSchema = (
     const schemaCode = yield* generateSchemaCode(schema)
     const sanitizedName = sanitizeIdentifier(name)
 
-    // Generate JSDoc if schema has a description
+    // Generate JSDoc if schema has a description or is deprecated
     const lines: Array<string> = []
-    if (schema.description) {
+    const isDeprecated = (schema as any).deprecated === true
+
+    if (schema.description || isDeprecated) {
       lines.push('/**')
-      lines.push(` * ${schema.description}`)
+      if (schema.description) {
+        lines.push(` * ${schema.description}`)
+      }
+      if (isDeprecated) {
+        if (schema.description) lines.push(' *')
+        lines.push(' * @deprecated This schema is deprecated and may be removed in a future version.')
+      }
       lines.push(' */')
     }
 

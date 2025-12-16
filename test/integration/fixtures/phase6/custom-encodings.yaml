@@ -1,0 +1,80 @@
+openapi: 3.1.0
+info:
+  title: Custom Encodings Test
+  version: 1.0.0
+
+paths:
+  /users/export:
+    get:
+      operationId: exportUsersCSV
+      summary: Export users as CSV
+      tags: [users]
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  /status:
+    get:
+      operationId: getStatus
+      summary: Get status as plain text
+      tags: [status]
+      responses:
+        '200':
+          description: Plain text status
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /form-submit:
+    post:
+      operationId: submitForm
+      summary: Submit form data
+      tags: [forms]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                subscribe:
+                  type: boolean
+      responses:
+        '200':
+          description: Form submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /data/json-or-text:
+    get:
+      operationId: getDataMultipleFormats
+      summary: Get data in JSON or text
+      tags: [data]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+            text/plain:
+              schema:
+                type: string

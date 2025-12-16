@@ -15,10 +15,12 @@ export interface ParsedOperation {
   readonly path: string
   readonly summary?: string | undefined
   readonly description?: string | undefined
+  readonly deprecated?: boolean
   readonly tags: ReadonlyArray<string>
   readonly pathParameters: ReadonlyArray<OpenApiParser.ParameterObject>
   readonly queryParameters: ReadonlyArray<OpenApiParser.ParameterObject>
   readonly headerParameters: ReadonlyArray<OpenApiParser.ParameterObject>
+  readonly cookieParameters: ReadonlyArray<OpenApiParser.ParameterObject>
   readonly requestBody?:
     | {
         readonly schema: OpenApiParser.SchemaObject
@@ -55,6 +57,7 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
         const pathParameters = parameters.filter((p) => p.in === 'path')
         const queryParameters = parameters.filter((p) => p.in === 'query')
         const headerParameters = parameters.filter((p) => p.in === 'header')
+        const cookieParameters = parameters.filter((p) => p.in === 'cookie')
 
         // Extract request body
         let requestBody: ParsedOperation['requestBody'] | undefined
@@ -91,10 +94,12 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
           path,
           summary: operation.summary,
           description: operation.description,
+          deprecated: (operation as any).deprecated,
           tags: operation.tags || [],
           pathParameters,
           queryParameters,
           headerParameters,
+          cookieParameters,
           requestBody,
           responses,
           security,
