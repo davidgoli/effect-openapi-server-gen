@@ -1,0 +1,15 @@
+# Minimal valid OpenAPI 3.1 spec for testing
+# Exercises: smallest possible valid spec
+openapi: 3.1.0
+info:
+  title: Minimal API
+  version: 1.0.0
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check endpoint
+      responses:
+        "200":
+          description: Service is healthy

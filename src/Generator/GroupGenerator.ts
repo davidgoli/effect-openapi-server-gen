@@ -65,11 +65,28 @@ export const generateGroupCode = (
 
     // Generate individual endpoint definitions
     const endpointVars: Array<string> = []
+    const declaredParams = new Set<string>()
 
     for (const operation of group.operations) {
-      const endpointCode = yield* EndpointGenerator.generateEndpoint(operation)
+      const generated = yield* EndpointGenerator.generateEndpoint(operation)
       const varName = operation.operationId
-      lines.push(`const ${varName} = ${endpointCode}`)
+
+      // Add path parameter declarations first (only if not already declared)
+      for (const paramDecl of generated.pathParamDeclarations) {
+        // Extract the parameter variable name from the declaration
+        // e.g., "const userIdParam = ..." -> "userIdParam"
+        const match = paramDecl.match(/^const\s+(\w+)\s+=/)
+        if (match) {
+          const paramVarName = match[1]
+          if (!declaredParams.has(paramVarName)) {
+            lines.push(paramDecl)
+            declaredParams.add(paramVarName)
+          }
+        }
+      }
+
+      // Then add the endpoint definition
+      lines.push(`const ${varName} = ${generated.endpointCode}`)
       lines.push("")
       endpointVars.push(varName)
     }

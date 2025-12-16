@@ -17,10 +17,11 @@ describe("EndpointGenerator", () => {
           headerParameters: []
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain("HttpApiEndpoint.get(\"getUsers\")")
-        expect(code).toContain("\"/users\"")
+        expect(result.pathParamDeclarations).toHaveLength(0)
+        expect(result.endpointCode).toContain("HttpApiEndpoint.get(\"getUsers\")")
+        expect(result.endpointCode).toContain("\"/users\"")
       }))
 
     it("should generate POST endpoint", () =>
@@ -35,9 +36,9 @@ describe("EndpointGenerator", () => {
           headerParameters: []
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain("HttpApiEndpoint.post(\"createUser\")")
+        expect(result.endpointCode).toContain("HttpApiEndpoint.post(\"createUser\")")
       }))
 
     it("should generate endpoint with path parameter using template syntax", () =>
@@ -59,12 +60,13 @@ describe("EndpointGenerator", () => {
           headerParameters: []
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain("HttpApiEndpoint.get(\"getUser\")")
-        expect(code).toContain("const userIdParam = HttpApiSchema.param")
-        expect(code).toContain("(\"userId\", Schema.Number)")
-        expect(code).toContain("`/users/${userIdParam}`")
+        expect(result.pathParamDeclarations).toHaveLength(1)
+        expect(result.pathParamDeclarations[0]).toContain("const userIdParam = HttpApiSchema.param")
+        expect(result.pathParamDeclarations[0]).toContain("(\"userId\", Schema.Number)")
+        expect(result.endpointCode).toContain("HttpApiEndpoint.get(\"getUser\")")
+        expect(result.endpointCode).toContain("`/users/${userIdParam}`")
       }))
 
     it("should generate endpoint with multiple path parameters", () =>
@@ -92,11 +94,12 @@ describe("EndpointGenerator", () => {
           headerParameters: []
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain("const userIdParam = HttpApiSchema.param")
-        expect(code).toContain("const postIdParam = HttpApiSchema.param")
-        expect(code).toContain("`/users/${userIdParam}/posts/${postIdParam}`")
+        expect(result.pathParamDeclarations).toHaveLength(2)
+        expect(result.pathParamDeclarations[0]).toContain("const userIdParam = HttpApiSchema.param")
+        expect(result.pathParamDeclarations[1]).toContain("const postIdParam = HttpApiSchema.param")
+        expect(result.endpointCode).toContain("`/users/${userIdParam}/posts/${postIdParam}`")
       }))
 
     it("should add setPayload for request body", () =>
@@ -121,11 +124,11 @@ describe("EndpointGenerator", () => {
           }
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain(".setPayload(")
-        expect(code).toContain("Schema.Struct")
-        expect(code).toContain("name: Schema.String")
+        expect(result.endpointCode).toContain(".setPayload(")
+        expect(result.endpointCode).toContain("Schema.Struct")
+        expect(result.endpointCode).toContain("name: Schema.String")
       }))
 
     it("should add addSuccess for response", () =>
@@ -147,10 +150,10 @@ describe("EndpointGenerator", () => {
           }
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain(".addSuccess(")
-        expect(code).toContain("Schema.Array")
+        expect(result.endpointCode).toContain(".addSuccess(")
+        expect(result.endpointCode).toContain("Schema.Array")
       }))
 
     it("should add setUrlParams for query parameters", () =>
@@ -177,12 +180,12 @@ describe("EndpointGenerator", () => {
           headerParameters: []
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain(".setUrlParams(")
-        expect(code).toContain("Schema.Struct")
-        expect(code).toContain("page: Schema.optional(Schema.Number)")
-        expect(code).toContain("limit: Schema.Number")
+        expect(result.endpointCode).toContain(".setUrlParams(")
+        expect(result.endpointCode).toContain("Schema.Struct")
+        expect(result.endpointCode).toContain("page: Schema.optional(Schema.Number)")
+        expect(result.endpointCode).toContain("limit: Schema.Number")
       }))
 
     it("should handle endpoint with all features", () =>
@@ -224,13 +227,13 @@ describe("EndpointGenerator", () => {
           }
         }
 
-        const code = yield* EndpointGenerator.generateEndpoint(operation)
+        const result = yield* EndpointGenerator.generateEndpoint(operation)
 
-        expect(code).toContain("HttpApiEndpoint.patch(\"updateUser\")")
-        expect(code).toContain("const userIdParam =")
-        expect(code).toContain(".setUrlParams(")
-        expect(code).toContain(".setPayload(")
-        expect(code).toContain(".addSuccess(")
+        expect(result.endpointCode).toContain("HttpApiEndpoint.patch(\"updateUser\")")
+        expect(result.pathParamDeclarations[0]).toContain("const userIdParam =")
+        expect(result.endpointCode).toContain(".setUrlParams(")
+        expect(result.endpointCode).toContain(".setPayload(")
+        expect(result.endpointCode).toContain(".addSuccess(")
       }))
   })
 })

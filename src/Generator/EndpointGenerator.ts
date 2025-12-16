@@ -11,18 +11,29 @@ import * as SchemaGenerator from "./SchemaGenerator.js"
  * @since 1.0.0
  * @category Generation
  */
+/**
+ * Result of endpoint generation
+ *
+ * @since 1.0.0
+ * @category Models
+ */
+export interface GeneratedEndpoint {
+  readonly pathParamDeclarations: ReadonlyArray<string>
+  readonly endpointCode: string
+}
+
 export const generateEndpoint = (
   operation: PathParser.ParsedOperation
-): Effect.Effect<string, SchemaGenerator.SchemaGenerationError> =>
+): Effect.Effect<GeneratedEndpoint, SchemaGenerator.SchemaGenerationError> =>
   Effect.gen(function*() {
-    const lines: Array<string> = []
+    const pathParamDeclarations: Array<string> = []
 
     // Generate path parameter definitions
     const pathParams: Array<{ name: string; varName: string }> = []
     for (const param of operation.pathParameters) {
       const varName = `${param.name}Param`
       const schemaCode = yield* SchemaGenerator.generateSchemaCode(param.schema!)
-      lines.push(`const ${varName} = HttpApiSchema.param("${param.name}", ${schemaCode})`)
+      pathParamDeclarations.push(`const ${varName} = HttpApiSchema.param("${param.name}", ${schemaCode})`)
       pathParams.push({ name: param.name, varName })
     }
 
@@ -80,7 +91,5 @@ export const generateEndpoint = (
       endpointCode += `\n  .addSuccess(${responseCode})`
     }
 
-    lines.push(endpointCode)
-
-    return lines.join("\n")
+    return { pathParamDeclarations, endpointCode }
   })

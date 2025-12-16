@@ -1,0 +1,146 @@
+# Simple CRUD API for testing Phase 1 generation
+# Exercises: basic paths, path parameters, request bodies, primitive types
+openapi: 3.1.0
+info:
+  title: Simple CRUD API
+  version: 1.0.0
+  description: A simple CRUD API for managing users
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get all users
+      tags:
+        - users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                      description: User ID
+                    name:
+                      type: string
+                      description: User name
+                    email:
+                      type: string
+                      description: User email
+                  required:
+                    - id
+                    - name
+
+    post:
+      operationId: createUser
+      summary: Create a new user
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+              required:
+                - name
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  email:
+                    type: string
+                required:
+                  - id
+                  - name
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      summary: Get a specific user
+      tags:
+        - users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                  email:
+                    type: string
+                required:
+                  - id
+                  - name
+
+    put:
+      operationId: updateUser
+      summary: Update a user
+      tags:
+        - users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+              required:
+                - name
+      responses:
+        "200":
+          description: User updated
+
+    delete:
+      operationId: deleteUser
+      summary: Delete a user
+      tags:
+        - users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: User deleted
