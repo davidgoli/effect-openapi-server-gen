@@ -10,8 +10,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@effect/openapi-server-gen/test": path.join(__dirname, "test"),
-      "@effect/openapi-server-gen": path.join(__dirname, "src")
+      "@davigoli/openapi-server-gen/test": path.join(__dirname, "test"),
+      "@davigoli/openapi-server-gen": path.join(__dirname, "src")
     }
   }
 })
