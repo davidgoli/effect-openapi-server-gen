@@ -14,7 +14,8 @@ describe("EndpointGenerator", () => {
           tags: [],
           pathParameters: [],
           queryParameters: [],
-          headerParameters: []
+          headerParameters: [],
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -33,7 +34,8 @@ describe("EndpointGenerator", () => {
           tags: [],
           pathParameters: [],
           queryParameters: [],
-          headerParameters: []
+          headerParameters: [],
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -57,7 +59,8 @@ describe("EndpointGenerator", () => {
             }
           ],
           queryParameters: [],
-          headerParameters: []
+          headerParameters: [],
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -91,7 +94,8 @@ describe("EndpointGenerator", () => {
             }
           ],
           queryParameters: [],
-          headerParameters: []
+          headerParameters: [],
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -121,7 +125,8 @@ describe("EndpointGenerator", () => {
               required: ["name"]
             },
             required: true
-          }
+          },
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -179,7 +184,8 @@ describe("EndpointGenerator", () => {
               schema: { type: "number" }
             }
           ],
-          headerParameters: []
+          headerParameters: [],
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -212,7 +218,8 @@ describe("EndpointGenerator", () => {
               required: false,
               schema: { type: "string", format: "uuid" }
             }
-          ]
+          ],
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)
@@ -253,7 +260,8 @@ describe("EndpointGenerator", () => {
               }
             }
           ],
-          headerParameters: []
+          headerParameters: [],
+          responses: []
         }
 
         const result = yield* EndpointGenerator.generateEndpoint(operation)

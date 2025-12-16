@@ -47,7 +47,7 @@ export const parseRefString = (ref: string): Effect.Effect<ParsedRef, ReferenceR
       schemaName: match[1]
     }
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catchAll((error: unknown) =>
       Effect.fail(new ReferenceResolutionError(error instanceof Error ? error.message : String(error)))
     )
   )

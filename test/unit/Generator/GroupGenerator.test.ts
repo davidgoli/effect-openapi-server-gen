@@ -15,7 +15,8 @@ describe("GroupGenerator", () => {
             tags: ["users"],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           },
           {
             operationId: "createUser",
@@ -24,7 +25,8 @@ describe("GroupGenerator", () => {
             tags: ["users"],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           }
         ]
 
@@ -45,7 +47,8 @@ describe("GroupGenerator", () => {
             tags: ["users"],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           },
           {
             operationId: "getPosts",
@@ -54,7 +57,8 @@ describe("GroupGenerator", () => {
             tags: ["posts"],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           }
         ]
 
@@ -74,7 +78,8 @@ describe("GroupGenerator", () => {
             tags: [],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           }
         ]
 
@@ -94,7 +99,8 @@ describe("GroupGenerator", () => {
             tags: ["users", "admin", "public"],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           }
         ]
 
@@ -114,7 +120,8 @@ describe("GroupGenerator", () => {
             tags: ["users"],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           }
         ]
 
@@ -133,7 +140,8 @@ describe("GroupGenerator", () => {
             tags: ["user-management"],
             pathParameters: [],
             queryParameters: [],
-            headerParameters: []
+            headerParameters: [],
+          responses: []
           }
         ]
 
@@ -149,6 +157,7 @@ describe("GroupGenerator", () => {
       Effect.gen(function*() {
         const group: GroupGenerator.OperationGroup = {
           name: "users",
+          varName: "users",
           capitalizedName: "Users",
           operations: [
             {
@@ -158,7 +167,8 @@ describe("GroupGenerator", () => {
               tags: ["users"],
               pathParameters: [],
               queryParameters: [],
-              headerParameters: []
+              headerParameters: [],
+          responses: []
             }
           ]
         }
@@ -173,6 +183,7 @@ describe("GroupGenerator", () => {
       Effect.gen(function*() {
         const group: GroupGenerator.OperationGroup = {
           name: "users",
+          varName: "users",
           capitalizedName: "Users",
           operations: [
             {
@@ -182,7 +193,8 @@ describe("GroupGenerator", () => {
               tags: ["users"],
               pathParameters: [],
               queryParameters: [],
-              headerParameters: []
+              headerParameters: [],
+          responses: []
             },
             {
               operationId: "createUser",
@@ -191,7 +203,8 @@ describe("GroupGenerator", () => {
               tags: ["users"],
               pathParameters: [],
               queryParameters: [],
-              headerParameters: []
+              headerParameters: [],
+          responses: []
             }
           ]
         }

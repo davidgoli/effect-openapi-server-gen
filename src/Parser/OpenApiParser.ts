@@ -109,7 +109,7 @@ export interface ResponseObject {
  * @category Models
  */
 export interface SchemaObject {
-  readonly type?: string
+  readonly type?: string | ReadonlyArray<string>
   readonly properties?: Record<string, SchemaObject>
   readonly required?: ReadonlyArray<string>
   readonly items?: SchemaObject
@@ -118,6 +118,23 @@ export interface SchemaObject {
   readonly enum?: ReadonlyArray<unknown>
   readonly format?: string
   readonly nullable?: boolean
+  readonly const?: unknown
+  // String validation
+  readonly minLength?: number
+  readonly maxLength?: number
+  readonly pattern?: string
+  // Number validation
+  readonly minimum?: number
+  readonly maximum?: number
+  readonly multipleOf?: number
+  readonly exclusiveMinimum?: boolean | number
+  readonly exclusiveMaximum?: boolean | number
+  // Schema combinators
+  readonly allOf?: ReadonlyArray<SchemaObject>
+  readonly oneOf?: ReadonlyArray<SchemaObject>
+  readonly anyOf?: ReadonlyArray<SchemaObject>
+  // Custom extensions
+  readonly "x-circular"?: ReadonlyArray<string>
 }
 
 /**
