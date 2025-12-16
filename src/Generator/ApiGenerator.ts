@@ -114,9 +114,6 @@ export const generateApi = (
     // Parse and generate schema definitions from components/schemas
     const registry = yield* SchemaParser.parseComponents(spec)
 
-    // Track all exports
-    const exports: Array<string> = []
-
     if (registry.schemas.size > 0) {
       lines.push("// Schema definitions from components/schemas")
       lines.push("")
@@ -124,17 +121,11 @@ export const generateApi = (
       // Sort schemas topologically to ensure dependencies are declared first
       const sortedSchemas = topologicalSort(registry.schemas)
 
-      // Generate named schemas in dependency order
+      // Generate named schemas in dependency order (exported inline)
       for (const [name, schema] of sortedSchemas) {
         const schemaCode = yield* SchemaGenerator.generateNamedSchema(name, schema)
         lines.push(schemaCode)
         lines.push("")
-
-        // Extract the const name for export (e.g., "const FooSchema" -> "FooSchema")
-        const constName = schemaCode.match(/const (\w+)/)?.[1]
-        if (constName) {
-          exports.push(constName)
-        }
       }
     }
 
@@ -151,39 +142,24 @@ export const generateApi = (
     const operations = yield* PathParser.extractOperations(spec)
     const groups = yield* GroupGenerator.generateGroups(operations)
 
-    // Generate group code and collect exports
+    // Generate group code (exported inline)
     for (const group of groups) {
       const groupCode = yield* GroupGenerator.generateGroupCode(group)
       lines.push(groupCode)
       lines.push("")
-
-      // Export all endpoints in the group
-      for (const operation of group.operations) {
-        exports.push(operation.operationId)
-      }
-
-      // Export the group itself
-      exports.push(`${group.varName}Group`)
     }
 
     // Generate API name from title (remove spaces, keep alphanumeric)
     const apiName = spec.info.title.replace(/[^a-zA-Z0-9]/g, "")
 
-    // Generate the top-level API
-    let apiCode = `const ${apiName} = HttpApi.make("${apiName}")`
+    // Generate the top-level API (exported)
+    let apiCode = `export const ${apiName} = HttpApi.make("${apiName}")`
 
     for (const group of groups) {
       apiCode += `\n  .add(${group.varName}Group)`
     }
 
     lines.push(apiCode)
-    lines.push("")
-
-    // Export the API
-    exports.push(apiName)
-
-    // Export all top-level names
-    lines.push(`export { ${exports.join(", ")} }`)
 
     return lines.join("\n")
   })

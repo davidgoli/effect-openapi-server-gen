@@ -120,15 +120,15 @@ export const generateGroupCode = (
         }
       }
 
-      // Then add the endpoint definition
-      lines.push(`const ${varName} = ${generated.endpointCode}`)
+      // Then add the endpoint definition (exported)
+      lines.push(`export const ${varName} = ${generated.endpointCode}`)
       lines.push("")
       endpointVars.push(varName)
     }
 
-    // Generate the group definition
+    // Generate the group definition (exported)
     // Use the sanitized variable name from the group
-    let groupCode = `const ${group.varName}Group = HttpApiGroup.make("${group.name}")`
+    let groupCode = `export const ${group.varName}Group = HttpApiGroup.make("${group.name}")`
 
     for (const varName of endpointVars) {
       groupCode += `\n  .add(${varName})`

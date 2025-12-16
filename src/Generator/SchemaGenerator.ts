@@ -271,7 +271,7 @@ export const generateNamedSchema = (
   Effect.gen(function*() {
     const schemaCode = yield* generateSchemaCode(schema)
     const sanitizedName = sanitizeIdentifier(name)
-    return `const ${sanitizedName}Schema = ${schemaCode}`
+    return `export const ${sanitizedName}Schema = ${schemaCode}`
   })
 
 /**
