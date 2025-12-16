@@ -47,3 +47,8 @@ export * as ReferenceResolver from './Parser/ReferenceResolver.js'
  * @since 1.0.0
  */
 export * as SchemaParser from './Parser/SchemaParser.js'
+
+/**
+ * @since 1.0.0
+ */
+export * as SecurityParser from './Parser/SecurityParser.js'
