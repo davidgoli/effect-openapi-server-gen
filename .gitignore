@@ -16,3 +16,6 @@ scratchpad/*
 .env.test.local
 .env.production.local
 output.ts
+*.ts
+!src/**/*.ts
+!test/**/*.ts

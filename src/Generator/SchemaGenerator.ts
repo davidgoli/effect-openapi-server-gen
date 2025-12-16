@@ -245,6 +245,20 @@ export const generateSchemaCode = (
   })
 
 /**
+ * Sanitize a string to be a valid JavaScript identifier (PascalCase for schema names)
+ * Handles kebab-case, snake_case, dots, and special characters
+ */
+const sanitizeIdentifier = (name: string): string => {
+  // Replace non-alphanumeric characters with spaces, then split
+  const parts = name.replace(/[^a-zA-Z0-9]+/g, " ").trim().split(/\s+/)
+
+  // Convert to PascalCase
+  return parts
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("")
+}
+
+/**
  * Generate a named schema definition
  *
  * @since 1.0.0
@@ -256,16 +270,19 @@ export const generateNamedSchema = (
 ): Effect.Effect<string, SchemaGenerationError> =>
   Effect.gen(function*() {
     const schemaCode = yield* generateSchemaCode(schema)
-    return `const ${name}Schema = ${schemaCode}`
+    const sanitizedName = sanitizeIdentifier(name)
+    return `const ${sanitizedName}Schema = ${schemaCode}`
   })
 
 /**
- * Extract schema name from $ref string
+ * Extract and sanitize schema name from $ref string
  * e.g., "#/components/schemas/User" -> "User"
+ * e.g., "#/components/schemas/schemas-Error" -> "SchemasError"
  */
 const extractSchemaName = (ref: string): string => {
   const match = ref.match(/^#\/components\/schemas\/(.+)$/)
-  return match ? match[1] : ref
+  const rawName = match ? match[1] : ref
+  return sanitizeIdentifier(rawName)
 }
 
 /**

@@ -29,9 +29,10 @@ export const generateEndpoint = (
     const pathParamDeclarations: Array<string> = []
 
     // Generate path parameter definitions
+    // Make parameter names unique by prefixing with operation ID to avoid collisions
     const pathParams: Array<{ name: string; varName: string }> = []
     for (const param of operation.pathParameters) {
-      const varName = `${param.name}Param`
+      const varName = `${operation.operationId}_${param.name}Param`
       const schemaCode = yield* SchemaGenerator.generateSchemaCode(param.schema!)
       pathParamDeclarations.push(`const ${varName} = HttpApiSchema.param("${param.name}", ${schemaCode})`)
       pathParams.push({ name: param.name, varName })
@@ -81,7 +82,8 @@ export const generateEndpoint = (
     if (operation.headerParameters.length > 0) {
       const headerProps: Array<string> = []
       for (const param of operation.headerParameters) {
-        const schemaCode = yield* SchemaGenerator.generateSchemaCode(param.schema!)
+        // Headers are transmitted as strings, so use generateQueryParamSchemaCode
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
         const isRequired = param.required ?? false
         // Header names should be quoted strings (e.g., "X-API-Key")
         const propCode = isRequired
@@ -102,18 +104,28 @@ export const generateEndpoint = (
     // Add responses (success and error)
     for (const response of operation.responses) {
       const statusCode = response.statusCode
+
+      // Skip wildcard status codes (e.g., "5XX", "4XX") - these are invalid in OpenAPI 3.1
+      if (!/^\d+$/.test(statusCode)) {
+        console.warn(
+          `⚠️  Skipping wildcard status code "${statusCode}" for operation "${operation.operationId}" - wildcard status codes are not supported`
+        )
+        continue
+      }
+
       const responseCode = yield* SchemaGenerator.generateSchemaCode(response.schema)
+      const statusNum = parseInt(statusCode, 10)
 
       if (statusCode.startsWith("2")) {
         // Success responses (2xx)
         if (statusCode === "200") {
           endpointCode += `\n  .addSuccess(${responseCode})`
         } else {
-          endpointCode += `\n  .addSuccess(${responseCode}, { status: ${statusCode} })`
+          endpointCode += `\n  .addSuccess(${responseCode}, { status: ${statusNum} })`
         }
       } else {
         // Error responses (4xx, 5xx)
-        endpointCode += `\n  .addError(${responseCode}, { status: ${statusCode} })`
+        endpointCode += `\n  .addError(${responseCode}, { status: ${statusNum} })`
       }
     }
 
