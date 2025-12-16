@@ -47,28 +47,26 @@ export const generateEndpoint = (
       delete: "del"
     }[method]
 
-    // Build the path string
-    let pathStr: string
+    // Build the path string and endpoint definition
+    let endpointCode: string
     if (pathParams.length > 0) {
       // Use template string syntax for paths with parameters
       const pathTemplate = operation.path.replace(/\{(\w+)\}/g, (_, paramName) => {
         const param = pathParams.find((p) => p.name === paramName)
         return param ? `\${${param.varName}}` : `{${paramName}}`
       })
-      pathStr = `\`${pathTemplate}\``
+      endpointCode = `HttpApiEndpoint.${methodCall}("${operation.operationId}")\`${pathTemplate}\``
     } else {
-      // Use simple string for paths without parameters
-      pathStr = `"${operation.path}"`
+      // Use two-argument form for paths without parameters
+      endpointCode = `HttpApiEndpoint.${methodCall}("${operation.operationId}", "${operation.path}")`
     }
-
-    // Start building the endpoint
-    let endpointCode = `HttpApiEndpoint.${methodCall}("${operation.operationId}")${pathStr}`
 
     // Add URL parameters (query params)
     if (operation.queryParameters.length > 0) {
       const queryParamProps: Array<string> = []
       for (const param of operation.queryParameters) {
-        const schemaCode = yield* SchemaGenerator.generateSchemaCode(param.schema!)
+        // Use generateQueryParamSchemaCode for query parameters (NumberFromString, BooleanFromString, etc.)
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
         const isRequired = param.required ?? false
         const propCode = isRequired
           ? `${param.name}: ${schemaCode}`

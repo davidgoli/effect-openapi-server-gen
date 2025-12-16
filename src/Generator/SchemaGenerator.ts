@@ -269,11 +269,77 @@ const extractSchemaName = (ref: string): string => {
 }
 
 /**
+ * Generate Effect Schema code specifically for query/path parameters
+ * Query parameters are always strings in URLs, so we need NumberFromString, BooleanFromString, etc.
+ *
+ * @since 1.0.0
+ * @category Generation
+ */
+export const generateQueryParamSchemaCode = (
+  schema: OpenApiParser.SchemaObject
+): Effect.Effect<string, SchemaGenerationError> =>
+  Effect.gen(function*() {
+    // Handle basic types that need string conversion
+    if (!schema.type || typeof schema.type === "string") {
+      const type = schema.type || "string"
+
+      if (type === "integer" || type === "number") {
+        // Use NumberFromString for query parameters
+        let code = "Schema.NumberFromString"
+
+        // Apply validation filters
+        const filters: Array<string> = []
+
+        if (schema.minimum !== undefined) {
+          if (schema.exclusiveMinimum === true) {
+            filters.push(`Schema.greaterThan(${schema.minimum})`)
+          } else {
+            filters.push(`Schema.greaterThanOrEqualTo(${schema.minimum})`)
+          }
+        }
+
+        if (schema.maximum !== undefined) {
+          if (schema.exclusiveMaximum === true) {
+            filters.push(`Schema.lessThan(${schema.maximum})`)
+          } else {
+            filters.push(`Schema.lessThanOrEqualTo(${schema.maximum})`)
+          }
+        }
+
+        if (schema.multipleOf !== undefined) {
+          filters.push(`Schema.multipleOf(${schema.multipleOf})`)
+        }
+
+        if (filters.length > 0) {
+          code = `${code}.pipe(${filters.join(", ")})`
+        }
+
+        return code
+      }
+
+      if (type === "boolean") {
+        // Use BooleanFromString for query parameters
+        return "Schema.BooleanFromString"
+      }
+    }
+
+    // For everything else, use the regular schema generation
+    // (strings, arrays, enums, etc. work the same way)
+    return yield* generateSchemaCode(schema)
+  })
+
+/**
  * Add annotations to schema code if description is present
  */
 const addAnnotations = (code: string, schema: OpenApiParser.SchemaObject): string => {
   if (schema.description) {
-    const escapedDescription = schema.description.replace(/"/g, "\\\"")
+    // Escape special characters for JSON string
+    const escapedDescription = schema.description
+      .replace(/\\/g, "\\\\") // Escape backslashes
+      .replace(/"/g, "\\\"") // Escape quotes
+      .replace(/\n/g, "\\n") // Escape newlines
+      .replace(/\r/g, "\\r") // Escape carriage returns
+      .replace(/\t/g, "\\t") // Escape tabs
     return `${code}.annotations({ description: "${escapedDescription}" })`
   }
   return code
