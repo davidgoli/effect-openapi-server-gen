@@ -51,7 +51,7 @@ The server will start on `http://localhost:3000`.
 ### Create a todo
 
 ```bash
-curl -X POST http://localhost:3000/api/todos \
+curl -X POST http://localhost:3000/todos \
   -H "Content-Type: application/json" \
   -d '{"title": "Buy groceries"}'
 ```
@@ -59,25 +59,25 @@ curl -X POST http://localhost:3000/api/todos \
 ### List all todos
 
 ```bash
-curl http://localhost:3000/api/todos
+curl http://localhost:3000/todos
 ```
 
 ### Filter completed todos
 
 ```bash
-curl http://localhost:3000/api/todos?completed=false
+curl "http://localhost:3000/todos?completed=false"
 ```
 
 ### Get a specific todo
 
 ```bash
-curl http://localhost:3000/api/todos/{id}
+curl http://localhost:3000/todos/{id}
 ```
 
 ### Update a todo
 
 ```bash
-curl -X PATCH http://localhost:3000/api/todos/{id} \
+curl -X PATCH http://localhost:3000/todos/{id} \
   -H "Content-Type: application/json" \
   -d '{"completed": true}'
 ```
@@ -85,7 +85,7 @@ curl -X PATCH http://localhost:3000/api/todos/{id} \
 ### Delete a todo
 
 ```bash
-curl -X DELETE http://localhost:3000/api/todos/{id}
+curl -X DELETE http://localhost:3000/todos/{id}
 ```
 
 ## Code Walkthrough

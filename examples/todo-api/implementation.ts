@@ -3,11 +3,18 @@
  *
  * This shows how to implement handlers for the generated API.
  */
-import { Effect, Layer, Ref } from 'effect'
+import { Effect, Layer, Ref, Schema } from 'effect'
 import { HttpApiBuilder } from '@effect/platform'
 import { NodeHttpServer, NodeRuntime } from '@effect/platform-node'
 import * as Http from 'node:http'
-import { TodoAPI, type Todo, type CreateTodoRequest, type UpdateTodoRequest } from './generated-api.js'
+import { TodoAPI, TodoSchema, CreateTodoRequestSchema, UpdateTodoRequestSchema } from './generated-api.js'
+
+/**
+ * Derive types from schemas
+ */
+type Todo = Schema.Schema.Type<typeof TodoSchema>
+type CreateTodoRequest = Schema.Schema.Type<typeof CreateTodoRequestSchema>
+type UpdateTodoRequest = Schema.Schema.Type<typeof UpdateTodoRequestSchema>
 
 /**
  * In-memory todo store
@@ -96,7 +103,7 @@ class TodoStore extends Effect.Service<TodoStore>()('TodoStore', {
 /**
  * Implement the Todos group handlers
  */
-const TodosLive = HttpApiBuilder.group(TodoAPI, 'todos', (handlers) =>
+const TodosLive = HttpApiBuilder.group(TodoAPI, 'Todos', (handlers) =>
   Effect.gen(function* () {
     const store = yield* TodoStore
 
@@ -147,16 +154,24 @@ const TodoAPILive = HttpApiBuilder.api(TodoAPI).pipe(Layer.provide(TodosLive))
 const HttpLive = NodeHttpServer.layer(() => Http.createServer(), { port: 3000 })
 
 /**
- * Main program - compose all layers and run the server
+ * Serve the API using the HTTP server
+ */
+const ServerLive = HttpApiBuilder.serve().pipe(
+  Layer.provide(TodoAPILive),
+  Layer.provide(HttpLive)
+)
+
+/**
+ * Main program
  */
 const program = Effect.gen(function* () {
-  console.log('🚀 Todo API server starting on http://localhost:3000')
+  console.log('🚀 Todo API server running on http://localhost:3000')
   console.log('📝 API routes:')
-  console.log('  GET    http://localhost:3000/api/todos')
-  console.log('  POST   http://localhost:3000/api/todos')
-  console.log('  GET    http://localhost:3000/api/todos/{id}')
-  console.log('  PATCH  http://localhost:3000/api/todos/{id}')
-  console.log('  DELETE http://localhost:3000/api/todos/{id}')
+  console.log('  GET    http://localhost:3000/todos')
+  console.log('  POST   http://localhost:3000/todos')
+  console.log('  GET    http://localhost:3000/todos/{id}')
+  console.log('  PATCH  http://localhost:3000/todos/{id}')
+  console.log('  DELETE http://localhost:3000/todos/{id}')
 
   yield* Effect.never
 })
@@ -166,8 +181,7 @@ const program = Effect.gen(function* () {
  */
 NodeRuntime.runMain(
   program.pipe(
-    Effect.provide(TodoAPILive),
-    Effect.provide(TodoStore.Default),
-    Effect.provide(HttpLive)
+    Effect.provide(ServerLive),
+    Effect.provide(TodoStore.Default)
   )
 )
