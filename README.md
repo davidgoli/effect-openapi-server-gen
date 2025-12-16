@@ -4,11 +4,11 @@ Generate type-safe [Effect](https://effect.website) HttpServer implementations f
 
 ## Features
 
-- ✨ **Type Safe**: Generated code provides full TypeScript inference from OpenAPI spec to handler implementation
-- 🔧 **Effect Schema Validation**: All request/response validation powered by [@effect/schema](https://effect.website/docs/schema/introduction)
-- 🎯 **Clean Generated Code**: Single file output with no manual edits required
-- 📦 **OpenAPI 3.1 Support**: Full support for modern OpenAPI features
-- 🚀 **Tested**: TDD implementation with 168+ passing tests
+- ✨ **Type Safe**: Full TypeScript inference from OpenAPI spec to handler implementation
+- 🔧 **Runtime Validation**: Request/response validation powered by [Effect Schema](https://effect.website/docs/schema/introduction)
+- 🎯 **Clean Generated Code**: Single file output, no manual editing required
+- 📦 **OpenAPI 3.1**: Full support for modern OpenAPI specifications
+- 🚀 **Production Ready**: Comprehensive test coverage with real-world API validation
 
 ## What Gets Generated
 
@@ -100,37 +100,36 @@ Each example includes a detailed README with code walkthrough and testing instru
 
 ## Supported OpenAPI Features
 
-### ✅ Phase 1: Foundation & Basic Paths
-- [x] GET, POST, PUT, PATCH, DELETE operations
-- [x] Path parameters with type validation
-- [x] Request bodies (application/json)
-- [x] Response schemas
-- [x] operationId requirement
-- [x] Tag-based grouping
+### HTTP Operations
+- All standard methods: GET, POST, PUT, PATCH, DELETE
+- Path parameters with type validation
+- Query parameters with validation rules
+- Header parameters with proper quoting
+- Request bodies (application/json)
+- Response schemas with multiple status codes
 
-### ✅ Phase 2: Schema Components & References
-- [x] Reusable schemas (`components/schemas`)
-- [x] `$ref` resolution
-- [x] Circular reference detection
-- [x] Nested schemas
-- [x] Array types with item schemas
-
-### ✅ Phase 3: Advanced JSON Schema Features
-- [x] **Enums & Literals**: `Schema.Literal` and `Schema.Union` generation
-- [x] **String Validation**: minLength, maxLength, pattern (regex), format
-- [x] **Number Validation**: minimum, maximum, multipleOf, exclusive bounds
-- [x] **Nullable Types**: Both OpenAPI 3.0 (`nullable: true`) and 3.1 (`type: ["string", "null"]`) styles
-- [x] **Schema Combinators**:
+### Schema Support
+- **Components**: Reusable schemas with `$ref` resolution
+- **Nested Objects**: Deep nesting and complex hierarchies
+- **Arrays**: Typed arrays with item validation
+- **Circular References**: Automatic detection and handling
+- **Enums & Literals**: `Schema.Literal` and `Schema.Union` generation
+- **Nullable Types**: Both OpenAPI 3.0 and 3.1 syntax
+- **Schema Combinators**:
   - `allOf` → `Schema.extend()`
-  - `oneOf` → `Schema.Union()`
-  - `anyOf` → `Schema.Union()`
+  - `oneOf` / `anyOf` → `Schema.Union()`
 
-### ✅ Phase 4: Complete Request/Response Handling
-- [x] **Query Parameters**: With validation rules
-- [x] **Header Parameters**: Properly quoted names (`"X-API-Key"`)
-- [x] **Multiple Response Codes**: 2xx success and 4xx/5xx errors
-- [x] **Custom Status Codes**: `{ status: 201 }`, etc.
-- [x] **Error Schemas**: Compatible with `Schema.TaggedError` pattern
+### Validation Rules
+- **Strings**: minLength, maxLength, pattern (regex), format (email, uuid, date-time, etc.)
+- **Numbers**: minimum, maximum, multipleOf, exclusive bounds
+- **Arrays**: minItems, maxItems
+- **Objects**: required fields, optional fields
+
+### API Organization
+- Tag-based grouping into `HttpApiGroup`
+- Server URL prefixes
+- operationId as endpoint identifiers
+- Deprecation annotations
 
 ## Example Generated Code
 
@@ -226,14 +225,18 @@ const UsersAPI = HttpApi.make("UsersAPI")
 export { UsersAPI }
 ```
 
-## CLI Usage
+## CLI Reference
 
 ```bash
-pnpm tsx src/CLI/Program.ts <spec-file> <output-file>
+# Basic usage
+openapi-server-gen <spec-file> <output-file>
 
-# Examples:
-pnpm tsx src/CLI/Program.ts ./api-spec.yaml ./generated/api.ts
-pnpm tsx src/CLI/Program.ts ./petstore.json ./src/generated/petstore-api.ts
+# Examples
+openapi-server-gen ./api-spec.yaml ./generated/api.ts
+openapi-server-gen ./petstore.json ./src/generated/petstore-api.ts
+
+# With npx (no installation)
+npx @davidgoli/openapi-server-gen ./api-spec.yaml ./generated/api.ts
 ```
 
 ## Validation Features
@@ -297,72 +300,46 @@ status: Schema.Union(
 
 ## Requirements
 
+Your project needs:
 - Node.js 18+
 - TypeScript 5.0+
-- Effect 3.0+
-- @effect/platform 0.93+
-- @effect/schema 0.75+
 
-## Project Status
+Generated code depends on:
+- `effect` ^3.17.0
+- `@effect/platform` ^0.87.0
+- `@effect/platform-node` ^0.82.0 (for NodeHttpServer)
 
-**Current Version**: 0.1.0 (Beta)
+## Current Limitations
 
-**Completed Phases**:
-- ✅ Phase 1: Foundation & Basic Paths
-- ✅ Phase 2: Schema Components & References
-- ✅ Phase 3: Advanced JSON Schema Features
-- ✅ Phase 4: Complete Request/Response Handling
+- **Content Types**: Only `application/json` is currently supported
+- **Security**: Security schemes are parsed but authentication handlers must be implemented manually
+- **Advanced Features**: Webhooks, multipart/form-data, and cookie parameters are not yet supported
 
-**Future Phases** (Optional):
-- 🔜 Phase 5: Security & Authentication (API keys, OAuth2, etc.)
-- 🔜 Phase 6: Advanced Features (multipart/form-data, webhooks, etc.)
-
-## Testing
-
-The project uses TDD with comprehensive test coverage:
-
-```bash
-# Run all tests
-pnpm test
-
-# Run specific test suite
-pnpm test PathParser
-pnpm test Phase4
-
-# Generate coverage report
-pnpm coverage
-```
-
-**Current Test Stats**: 168 tests passing across 13 test files
+These features may be added in future versions based on user demand.
 
 ## Contributing
 
-This project was built with Test-Driven Development. When contributing:
+Contributions are welcome! This project follows test-driven development:
 
-1. Write failing tests first
-2. Implement the feature
-3. Ensure all tests pass
-4. Run linter: `pnpm lint-fix`
-5. Run `pnpm codegen` to regenerate `src/index.ts` if you added new modules
-6. Run `pnpm format` to format all files with Prettier
+1. Write tests for new features first
+2. Implement the feature to make tests pass
+3. Ensure all existing tests still pass
+4. Run `pnpm lint-fix` and `pnpm format` before committing
 
-## Known Limitations
-
-- Only `application/json` content type supported (Phase 6 will add more)
-- Security schemes parsed but handlers not generated (Phase 5)
-- Webhooks not yet supported (Phase 6)
+Run tests with `pnpm test` or generate coverage with `pnpm coverage`.
 
 ## License
 
 MIT
 
-## Links
+## Resources
 
-- [Effect Documentation](https://effect.website)
-- [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0)
-- [@effect/platform HttpApi](https://effect.website/docs/guides/http-api)
-- [Effect Schema](https://effect.website/docs/schema/introduction)
+- [Effect Documentation](https://effect.website) - Learn about the Effect ecosystem
+- [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0) - Official OpenAPI docs
+- [Effect Platform HttpApi Guide](https://effect.website/docs/guides/http-api) - Building HTTP APIs with Effect
+- [Effect Schema Documentation](https://effect.website/docs/schema/introduction) - Schema validation and transformation
 
----
+## See Also
 
-**Built with ❤️ using [Effect](https://effect.website) and TDD**
+- [Examples Directory](./examples) - Complete working examples with detailed guides
+- [Effect Community](https://effect.website/docs/community/community) - Get help and connect with other Effect users
