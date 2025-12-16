@@ -108,7 +108,7 @@ describe("PathParser", () => {
 
         expect(operations[0].pathParameters).toHaveLength(1)
         expect(operations[0].pathParameters[0].name).toBe("userId")
-        expect(operations[0].pathParameters[0].schema.type).toBe("number")
+        expect(operations[0].pathParameters[0].schema?.type).toBe("number")
       }))
 
     it("should extract query parameters", () =>

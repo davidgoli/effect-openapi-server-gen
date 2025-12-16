@@ -12,20 +12,24 @@ export interface ParsedOperation {
   readonly operationId: string
   readonly method: "get" | "post" | "put" | "patch" | "delete"
   readonly path: string
-  readonly summary?: string
-  readonly description?: string
+  readonly summary?: string | undefined
+  readonly description?: string | undefined
   readonly tags: ReadonlyArray<string>
   readonly pathParameters: ReadonlyArray<OpenApiParser.ParameterObject>
   readonly queryParameters: ReadonlyArray<OpenApiParser.ParameterObject>
   readonly headerParameters: ReadonlyArray<OpenApiParser.ParameterObject>
-  readonly requestBody?: {
-    readonly schema: OpenApiParser.SchemaObject
-    readonly required: boolean
-  }
-  readonly successResponse?: {
-    readonly statusCode: string
-    readonly schema: OpenApiParser.SchemaObject
-  }
+  readonly requestBody?:
+    | {
+        readonly schema: OpenApiParser.SchemaObject
+        readonly required: boolean
+      }
+    | undefined
+  readonly successResponse?:
+    | {
+        readonly statusCode: string
+        readonly schema: OpenApiParser.SchemaObject
+      }
+    | undefined
 }
 
 /**
