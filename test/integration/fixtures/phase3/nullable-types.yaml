@@ -1,0 +1,118 @@
+# Nullable Types Test
+# Exercises: nullable keyword, Schema.Union(type, Schema.Null), null handling
+openapi: 3.1.0
+info:
+  title: Nullable Types API
+  version: 1.0.0
+  description: Test nullable type handling
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        middleName:
+          type:
+            - string
+            - "null"
+          description: Nullable middle name (OpenAPI 3.1 style)
+        email:
+          type: string
+          nullable: true
+          description: Nullable email (OpenAPI 3.0 style)
+        phone:
+          type: string
+        address:
+          oneOf:
+            - type: string
+            - type: "null"
+          description: Nullable address using oneOf
+      required:
+        - id
+        - name
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        description:
+          type:
+            - string
+            - "null"
+        discount:
+          type:
+            - number
+            - "null"
+        metadata:
+          type:
+            - object
+            - "null"
+          properties:
+            key:
+              type: string
+      required:
+        - id
+        - name
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get users
+      tags:
+        - users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      operationId: createUser
+      summary: Create a user
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /products:
+    post:
+      operationId: createProduct
+      summary: Create a product
+      tags:
+        - products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'

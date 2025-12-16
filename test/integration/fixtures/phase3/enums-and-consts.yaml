@@ -1,0 +1,110 @@
+# Enums and Constants Test
+# Exercises: enum (Schema.Union of Literals), const (Schema.Literal), literal values
+openapi: 3.1.0
+info:
+  title: Enums and Constants API
+  version: 1.0.0
+  description: Test enum and const keyword handling
+
+components:
+  schemas:
+    Status:
+      type: string
+      enum:
+        - active
+        - inactive
+        - pending
+
+    Priority:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - critical
+
+    Role:
+      type: string
+      enum:
+        - admin
+        - user
+        - guest
+
+    ConstantValue:
+      const: "fixed-value"
+
+    NumericEnum:
+      type: number
+      enum:
+        - 1
+        - 2
+        - 3
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        type:
+          const: "task"
+        version:
+          type: number
+          enum:
+            - 1
+            - 2
+      required:
+        - id
+        - title
+        - status
+        - type
+
+paths:
+  /tasks:
+    get:
+      operationId: getTasks
+      summary: Get tasks
+      tags:
+        - tasks
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/Status'
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/Priority'
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+
+    post:
+      operationId: createTask
+      summary: Create a task
+      tags:
+        - tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'

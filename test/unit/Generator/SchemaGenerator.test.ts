@@ -281,4 +281,195 @@ describe("SchemaGenerator", () => {
         expect(result).toContain("author: UserSchema")
       }))
   })
+
+  describe("enums and literals - Phase 3", () => {
+    it("should handle string enum as Schema.Literal union", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "string",
+          enum: ["active", "inactive", "pending"]
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Literal")
+        expect(result).toContain("\"active\"")
+        expect(result).toContain("\"inactive\"")
+        expect(result).toContain("\"pending\"")
+      }))
+
+    it("should handle numeric enum", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "number",
+          enum: [1, 2, 3]
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Literal")
+      }))
+
+    it("should handle const keyword as Schema.Literal", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          const: "fixed-value"
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe("Schema.Literal(\"fixed-value\")")
+      }))
+  })
+
+  describe("string validation - Phase 3", () => {
+    it("should handle minLength constraint", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "string",
+          minLength: 3
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.String")
+        expect(result).toContain("Schema.minLength")
+        expect(result).toContain("3")
+      }))
+
+    it("should handle maxLength constraint", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "string",
+          maxLength: 100
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.maxLength")
+        expect(result).toContain("100")
+      }))
+
+    it("should handle pattern (regex) constraint", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "string",
+          pattern: "^[a-zA-Z0-9]+$"
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.pattern")
+        expect(result).toContain("^[a-zA-Z0-9]+$")
+      }))
+
+    it("should handle email format", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "string",
+          format: "email"
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should use a specialized schema for email
+        expect(result).toContain("String")
+      }))
+
+    it("should handle uuid format", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "string",
+          format: "uuid"
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("String")
+      }))
+  })
+
+  describe("number validation - Phase 3", () => {
+    it("should handle minimum constraint", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "number",
+          minimum: 0
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Number")
+        expect(result).toContain("Schema.greaterThanOrEqualTo")
+        expect(result).toContain("0")
+      }))
+
+    it("should handle maximum constraint", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "number",
+          maximum: 100
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.lessThanOrEqualTo")
+        expect(result).toContain("100")
+      }))
+
+    it("should handle multipleOf constraint", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "number",
+          multipleOf: 0.5
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.multipleOf")
+        expect(result).toContain("0.5")
+      }))
+
+    it("should handle exclusiveMinimum", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "number",
+          minimum: 0,
+          exclusiveMinimum: true
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.greaterThan")
+      }))
+  })
+
+  describe("nullable types - Phase 3", () => {
+    it("should handle nullable property (OpenAPI 3.0 style)", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: "string",
+          nullable: true
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Union")
+        expect(result).toContain("Schema.String")
+        expect(result).toContain("Schema.Null")
+      }))
+
+    it("should handle type array with null (OpenAPI 3.1 style)", () =>
+      Effect.gen(function*() {
+        const schema: OpenApiParser.SchemaObject = {
+          type: ["string", "null"]
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain("Schema.Union")
+        expect(result).toContain("Schema.String")
+        expect(result).toContain("Schema.Null")
+      }))
+  })
 })

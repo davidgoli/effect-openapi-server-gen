@@ -1,0 +1,138 @@
+# String Validation Test
+# Exercises: pattern (regex), minLength, maxLength, format (email, uri, uuid, date-time)
+openapi: 3.1.0
+info:
+  title: String Validation API
+  version: 1.0.0
+  description: Test string validation constraints
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID identifier
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: "^[a-zA-Z0-9_]+$"
+          description: Alphanumeric username
+        email:
+          type: string
+          format: email
+          description: Email address
+        website:
+          type: string
+          format: uri
+          description: Website URL
+        phone:
+          type: string
+          pattern: "^\\+?[1-9]\\d{1,14}$"
+          description: Phone number in E.164 format
+        bio:
+          type: string
+          maxLength: 500
+          description: User biography
+        zipCode:
+          type: string
+          pattern: "^\\d{5}$"
+          description: US ZIP code
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        birthDate:
+          type: string
+          format: date
+          description: Birth date
+      required:
+        - id
+        - username
+        - email
+
+    Product:
+      type: object
+      properties:
+        sku:
+          type: string
+          minLength: 8
+          maxLength: 12
+          pattern: "^[A-Z]{3}-\\d{4,8}$"
+          description: Product SKU
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 1000
+      required:
+        - sku
+        - name
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get users
+      tags:
+        - users
+      parameters:
+        - name: username
+          in: query
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 20
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      operationId: createUser
+      summary: Create a user
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /products:
+    post:
+      operationId: createProduct
+      summary: Create a product
+      tags:
+        - products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'

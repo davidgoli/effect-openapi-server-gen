@@ -29,13 +29,99 @@ export const generateSchemaCode = (
       return `${schemaName}Schema`
     }
 
-    // Handle primitive types
+    // Handle const keyword (OpenAPI 3.1)
+    if ("const" in schema) {
+      const value = schema.const
+      return typeof value === "string" ? `Schema.Literal("${value}")` : `Schema.Literal(${value})`
+    }
+
+    // Handle enum keyword
+    if (schema.enum) {
+      const literals = schema.enum.map((val) =>
+        typeof val === "string" ? `Schema.Literal("${val}")` : `Schema.Literal(${val})`
+      )
+      return `Schema.Union(${literals.join(", ")})`
+    }
+
+    // Handle nullable types (OpenAPI 3.0 style)
+    if (schema.nullable === true) {
+      // Remove nullable flag and generate base schema
+      const baseSchema = { ...schema }
+      delete (baseSchema as any).nullable
+      const baseCode = yield* generateSchemaCode(baseSchema)
+      return `Schema.Union(${baseCode}, Schema.Null)`
+    }
+
+    // Handle type array with null (OpenAPI 3.1 style)
+    if (Array.isArray(schema.type)) {
+      const types = schema.type
+      if (types.includes("null")) {
+        // Generate schema for non-null type
+        const nonNullTypes = types.filter((t) => t !== "null")
+        if (nonNullTypes.length === 1) {
+          const baseSchema = { ...schema, type: nonNullTypes[0] }
+          const baseCode = yield* generateSchemaCode(baseSchema as OpenApiParser.SchemaObject)
+          return `Schema.Union(${baseCode}, Schema.Null)`
+        }
+      }
+    }
+
+    // Handle primitive types with validation
     if (schema.type === "string") {
-      return addAnnotations("Schema.String", schema)
+      let code = "Schema.String"
+
+      // Apply validation filters
+      const filters: Array<string> = []
+
+      if (schema.minLength !== undefined) {
+        filters.push(`Schema.minLength(${schema.minLength})`)
+      }
+      if (schema.maxLength !== undefined) {
+        filters.push(`Schema.maxLength(${schema.maxLength})`)
+      }
+      if (schema.pattern !== undefined) {
+        const escapedPattern = schema.pattern.replace(/\\/g, "\\\\")
+        filters.push(`Schema.pattern(new RegExp("${escapedPattern}"))`)
+      }
+
+      if (filters.length > 0) {
+        code = `${code}.pipe(${filters.join(", ")})`
+      }
+
+      return addAnnotations(code, schema)
     }
 
     if (schema.type === "number" || schema.type === "integer") {
-      return addAnnotations("Schema.Number", schema)
+      let code = "Schema.Number"
+
+      // Apply validation filters
+      const filters: Array<string> = []
+
+      if (schema.minimum !== undefined) {
+        if (schema.exclusiveMinimum === true) {
+          filters.push(`Schema.greaterThan(${schema.minimum})`)
+        } else {
+          filters.push(`Schema.greaterThanOrEqualTo(${schema.minimum})`)
+        }
+      }
+
+      if (schema.maximum !== undefined) {
+        if (schema.exclusiveMaximum === true) {
+          filters.push(`Schema.lessThan(${schema.maximum})`)
+        } else {
+          filters.push(`Schema.lessThanOrEqualTo(${schema.maximum})`)
+        }
+      }
+
+      if (schema.multipleOf !== undefined) {
+        filters.push(`Schema.multipleOf(${schema.multipleOf})`)
+      }
+
+      if (filters.length > 0) {
+        code = `${code}.pipe(${filters.join(", ")})`
+      }
+
+      return addAnnotations(code, schema)
     }
 
     if (schema.type === "boolean") {

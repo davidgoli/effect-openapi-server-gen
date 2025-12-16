@@ -1,0 +1,158 @@
+# Number Validation Test
+# Exercises: minimum, maximum, multipleOf, exclusiveMinimum, exclusiveMaximum
+openapi: 3.1.0
+info:
+  title: Number Validation API
+  version: 1.0.0
+  description: Test numeric validation constraints
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: false
+          description: Price must be non-negative
+        discountPercent:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Discount percentage (0-100)
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          multipleOf: 0.5
+          description: Rating from 1-5 in 0.5 increments
+        quantity:
+          type: integer
+          minimum: 1
+          description: Quantity must be at least 1
+        stock:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          description: Stock quantity
+      required:
+        - id
+        - name
+        - price
+
+    Range:
+      type: object
+      properties:
+        min:
+          type: number
+          exclusiveMinimum: 0
+          description: Exclusive minimum (> 0)
+        max:
+          type: number
+          exclusiveMaximum: 100
+          description: Exclusive maximum (< 100)
+        step:
+          type: number
+          multipleOf: 0.01
+          description: Step value in 0.01 increments
+      required:
+        - min
+        - max
+
+    Measurements:
+      type: object
+      properties:
+        temperature:
+          type: number
+          minimum: -273.15
+          maximum: 1000
+          description: Temperature in Celsius
+        weight:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Weight must be positive
+        percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          multipleOf: 1
+          description: Whole percentage
+
+paths:
+  /products:
+    get:
+      operationId: getProducts
+      summary: Get products
+      tags:
+        - products
+      parameters:
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: minRating
+          in: query
+          schema:
+            type: number
+            minimum: 1
+            maximum: 5
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+    post:
+      operationId: createProduct
+      summary: Create a product
+      tags:
+        - products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /ranges:
+    post:
+      operationId: createRange
+      summary: Create a range
+      tags:
+        - ranges
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Range'
+      responses:
+        "201":
+          description: Range created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Range'

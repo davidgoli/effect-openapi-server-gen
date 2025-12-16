@@ -1,0 +1,194 @@
+# Schema Combinators Test
+# Exercises: allOf (Schema.extend), oneOf (Schema.Union), anyOf, discriminator
+openapi: 3.1.0
+info:
+  title: Schema Combinators API
+  version: 1.0.0
+  description: Test schema composition with allOf, oneOf, anyOf
+
+components:
+  schemas:
+    BaseEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+
+    User:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity'
+        - type: object
+          properties:
+            username:
+              type: string
+            email:
+              type: string
+          required:
+            - username
+            - email
+
+    Product:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity'
+        - type: object
+          properties:
+            name:
+              type: string
+            price:
+              type: number
+          required:
+            - name
+            - price
+
+    StringOrNumber:
+      oneOf:
+        - type: string
+        - type: number
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          anyOf:
+            - type: string
+              format: email
+            - type: string
+              format: uri
+      required:
+        - id
+        - value
+
+    Pet:
+      type: object
+      discriminator:
+        propertyName: petType
+      properties:
+        petType:
+          type: string
+        name:
+          type: string
+      required:
+        - petType
+        - name
+
+    Cat:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          properties:
+            meowVolume:
+              type: number
+          required:
+            - meowVolume
+
+    Dog:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          properties:
+            barkVolume:
+              type: number
+          required:
+            - barkVolume
+
+    SearchResult:
+      oneOf:
+        - $ref: '#/components/schemas/User'
+        - $ref: '#/components/schemas/Product'
+
+paths:
+  /users:
+    post:
+      operationId: createUser
+      summary: Create a user
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /products:
+    post:
+      operationId: createProduct
+      summary: Create a product
+      tags:
+        - products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /pets:
+    post:
+      operationId: createPet
+      summary: Create a pet (discriminated union)
+      tags:
+        - pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Cat'
+                - $ref: '#/components/schemas/Dog'
+              discriminator:
+                propertyName: petType
+                mapping:
+                  cat: '#/components/schemas/Cat'
+                  dog: '#/components/schemas/Dog'
+      responses:
+        "201":
+          description: Pet created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+  /search:
+    get:
+      operationId: search
+      summary: Search for users or products
+      tags:
+        - search
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResult'
