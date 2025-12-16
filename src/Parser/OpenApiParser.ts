@@ -151,7 +151,7 @@ export interface ComponentsObject {
  */
 export class ParseError {
   readonly _tag = 'ParseError'
-  constructor(readonly message: string,) {}
+  constructor(readonly message: string) {}
 }
 
 /**
@@ -160,66 +160,66 @@ export class ParseError {
  * @since 1.0.0
  * @category Parsing
  */
-export const parse = (content: string,): Effect.Effect<OpenApiSpec, ParseError> =>
-  Effect.gen(function*() {
+export const parse = (content: string): Effect.Effect<OpenApiSpec, ParseError> =>
+  Effect.gen(function* () {
     // Try to parse as JSON or YAML
     let spec: unknown
     try {
-      spec = JSON.parse(content,)
+      spec = JSON.parse(content)
     } catch {
       try {
-        spec = YAML.parse(content,)
+        spec = YAML.parse(content)
       } catch (error) {
-        return yield* Effect.fail(new ParseError(`Failed to parse spec: ${String(error,)}`,),)
+        return yield* Effect.fail(new ParseError(`Failed to parse spec: ${String(error)}`))
       }
     }
 
     // Validate the spec structure
     if (typeof spec !== 'object' || spec === null) {
-      return yield* Effect.fail(new ParseError('Spec must be an object',),)
+      return yield* Effect.fail(new ParseError('Spec must be an object'))
     }
 
     const obj = spec as Record<string, unknown>
 
     // Validate openapi version
     if (typeof obj.openapi !== 'string') {
-      return yield* Effect.fail(new ParseError('Missing required field: openapi',),)
+      return yield* Effect.fail(new ParseError('Missing required field: openapi'))
     }
 
-    if (!obj.openapi.startsWith('3.1',)) {
+    if (!obj.openapi.startsWith('3.1')) {
       return yield* Effect.fail(
-        new ParseError(`Unsupported OpenAPI version: ${obj.openapi}. Only OpenAPI 3.1.x is supported.`,),
+        new ParseError(`Unsupported OpenAPI version: ${obj.openapi}. Only OpenAPI 3.1.x is supported.`)
       )
     }
 
     // Validate info object
     if (typeof obj.info !== 'object' || obj.info === null) {
-      return yield* Effect.fail(new ParseError('Missing or invalid required field: info',),)
+      return yield* Effect.fail(new ParseError('Missing or invalid required field: info'))
     }
 
     const info = obj.info as Record<string, unknown>
     if (typeof info.title !== 'string') {
-      return yield* Effect.fail(new ParseError('Missing required field: info.title',),)
+      return yield* Effect.fail(new ParseError('Missing required field: info.title'))
     }
 
     if (typeof info.version !== 'string') {
-      return yield* Effect.fail(new ParseError('Missing required field: info.version',),)
+      return yield* Effect.fail(new ParseError('Missing required field: info.version'))
     }
 
     // Validate paths object
     if (typeof obj.paths !== 'object' || obj.paths === null) {
-      return yield* Effect.fail(new ParseError('Missing or invalid required field: paths',),)
+      return yield* Effect.fail(new ParseError('Missing or invalid required field: paths'))
     }
 
     // Validate operationId for all operations
     const paths = obj.paths as Record<string, unknown>
-    for (const [path, pathItem,] of Object.entries(paths,)) {
+    for (const [path, pathItem] of Object.entries(paths)) {
       if (typeof pathItem !== 'object' || pathItem === null) {
         continue
       }
 
       const operations = pathItem as Record<string, unknown>
-      const httpMethods = ['get', 'post', 'put', 'patch', 'delete',]
+      const httpMethods = ['get', 'post', 'put', 'patch', 'delete']
 
       for (const method of httpMethods) {
         const operation = operations[method]
@@ -227,7 +227,7 @@ export const parse = (content: string,): Effect.Effect<OpenApiSpec, ParseError> 
           const op = operation as Record<string, unknown>
           if (typeof op.operationId !== 'string') {
             return yield* Effect.fail(
-              new ParseError(`Missing required field operationId for operation: ${method.toUpperCase()} ${path}`,),
+              new ParseError(`Missing required field operationId for operation: ${method.toUpperCase()} ${path}`)
             )
           }
         }
@@ -235,4 +235,4 @@ export const parse = (content: string,): Effect.Effect<OpenApiSpec, ParseError> 
     }
 
     return spec as OpenApiSpec
-  },)
+  })

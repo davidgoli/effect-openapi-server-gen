@@ -20,9 +20,9 @@ export interface ParsedOperation {
   readonly headerParameters: ReadonlyArray<OpenApiParser.ParameterObject>
   readonly requestBody?:
     | {
-      readonly schema: OpenApiParser.SchemaObject
-      readonly required: boolean
-    }
+        readonly schema: OpenApiParser.SchemaObject
+        readonly required: boolean
+      }
     | undefined
   readonly responses: ReadonlyArray<{
     readonly statusCode: string
@@ -36,20 +36,12 @@ export interface ParsedOperation {
  * @since 1.0.0
  * @category Parsing
  */
-export const extractOperations = (
-  spec: OpenApiParser.OpenApiSpec,
-): Effect.Effect<ReadonlyArray<ParsedOperation>> =>
+export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effect<ReadonlyArray<ParsedOperation>> =>
   Effect.sync(() => {
     const operations: Array<ParsedOperation> = []
 
-    for (const [path, pathItem,] of Object.entries(spec.paths,)) {
-      const methods: Array<'get' | 'post' | 'put' | 'patch' | 'delete'> = [
-        'get',
-        'post',
-        'put',
-        'patch',
-        'delete',
-      ]
+    for (const [path, pathItem] of Object.entries(spec.paths)) {
+      const methods: Array<'get' | 'post' | 'put' | 'patch' | 'delete'> = ['get', 'post', 'put', 'patch', 'delete']
 
       for (const method of methods) {
         const operation = pathItem[method]
@@ -58,9 +50,9 @@ export const extractOperations = (
         const parameters = operation.parameters || []
 
         // Separate parameters by type
-        const pathParameters = parameters.filter((p,) => p.in === 'path')
-        const queryParameters = parameters.filter((p,) => p.in === 'query')
-        const headerParameters = parameters.filter((p,) => p.in === 'header')
+        const pathParameters = parameters.filter((p) => p.in === 'path')
+        const queryParameters = parameters.filter((p) => p.in === 'query')
+        const headerParameters = parameters.filter((p) => p.in === 'header')
 
         // Extract request body
         let requestBody: ParsedOperation['requestBody'] | undefined
@@ -76,13 +68,13 @@ export const extractOperations = (
 
         // Extract all responses with schemas
         const responses: Array<{ statusCode: string; schema: OpenApiParser.SchemaObject }> = []
-        for (const [statusCode, response,] of Object.entries(operation.responses,)) {
+        for (const [statusCode, response] of Object.entries(operation.responses)) {
           const content = response.content?.['application/json']
           if (content?.schema) {
             responses.push({
               statusCode,
               schema: content.schema,
-            },)
+            })
           }
         }
 
@@ -98,9 +90,9 @@ export const extractOperations = (
           headerParameters,
           requestBody,
           responses,
-        },)
+        })
       }
     }
 
     return operations
-  },)
+  })

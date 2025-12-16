@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect'
  * @since 1.0.0
  * @category Generation
  */
-export const emit = (code: string,): Effect.Effect<string> =>
+export const emit = (code: string): Effect.Effect<string> =>
   Effect.sync(() => {
     const header = [
       '/**',
@@ -20,7 +20,7 @@ export const emit = (code: string,): Effect.Effect<string> =>
       ' * This file was automatically generated from an OpenAPI specification.',
       ' * To regenerate, run the generator again with your OpenAPI spec.',
       ' */',
-    ].join('\n',)
+    ].join('\n')
 
     return `${header}\n\n${code}\n`
-  },)
+  })

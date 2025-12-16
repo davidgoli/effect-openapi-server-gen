@@ -11,44 +11,44 @@ import * as SchemaGenerator from './SchemaGenerator.js'
 /**
  * Extract $ref dependencies from a schema
  */
-const extractDependencies = (schema: OpenApiParser.SchemaObject,): Set<string> => {
+const extractDependencies = (schema: OpenApiParser.SchemaObject): Set<string> => {
   const deps = new Set<string>()
 
-  const visit = (s: OpenApiParser.SchemaObject,) => {
+  const visit = (s: OpenApiParser.SchemaObject) => {
     if (s.$ref) {
-      const match = s.$ref.match(/^#\/components\/schemas\/(.+)$/,)
+      const match = s.$ref.match(/^#\/components\/schemas\/(.+)$/)
       if (match) {
-        deps.add(match[1],)
+        deps.add(match[1])
       }
     }
 
     // Check nested schemas
     if (s.properties) {
-      for (const prop of Object.values(s.properties,)) {
-        visit(prop,)
+      for (const prop of Object.values(s.properties)) {
+        visit(prop)
       }
     }
     if (s.items) {
-      visit(s.items,)
+      visit(s.items)
     }
     if (s.allOf) {
       for (const sub of s.allOf) {
-        visit(sub,)
+        visit(sub)
       }
     }
     if (s.oneOf) {
       for (const sub of s.oneOf) {
-        visit(sub,)
+        visit(sub)
       }
     }
     if (s.anyOf) {
       for (const sub of s.anyOf) {
-        visit(sub,)
+        visit(sub)
       }
     }
   }
 
-  visit(schema,)
+  visit(schema)
   return deps
 }
 
@@ -56,36 +56,36 @@ const extractDependencies = (schema: OpenApiParser.SchemaObject,): Set<string> =
  * Topologically sort schemas based on their dependencies
  */
 const topologicalSort = (
-  schemas: ReadonlyMap<string, OpenApiParser.SchemaObject>,
-): Array<[string, OpenApiParser.SchemaObject,]> => {
-  const sorted: Array<[string, OpenApiParser.SchemaObject,]> = []
+  schemas: ReadonlyMap<string, OpenApiParser.SchemaObject>
+): Array<[string, OpenApiParser.SchemaObject]> => {
+  const sorted: Array<[string, OpenApiParser.SchemaObject]> = []
   const visited = new Set<string>()
   const visiting = new Set<string>()
 
-  const visit = (name: string,) => {
-    if (visited.has(name,)) return
-    if (visiting.has(name,)) {
+  const visit = (name: string) => {
+    if (visited.has(name)) return
+    if (visiting.has(name)) {
       // Circular dependency - just add it now
       return
     }
 
-    visiting.add(name,)
-    const schema = schemas.get(name,)
+    visiting.add(name)
+    const schema = schemas.get(name)
     if (schema) {
-      const deps = extractDependencies(schema,)
+      const deps = extractDependencies(schema)
       for (const dep of deps) {
-        if (schemas.has(dep,)) {
-          visit(dep,)
+        if (schemas.has(dep)) {
+          visit(dep)
         }
       }
-      sorted.push([name, schema,],)
+      sorted.push([name, schema])
     }
-    visiting.delete(name,)
-    visited.add(name,)
+    visiting.delete(name)
+    visited.add(name)
   }
 
   for (const name of schemas.keys()) {
-    visit(name,)
+    visit(name)
   }
 
   return sorted
@@ -98,59 +98,59 @@ const topologicalSort = (
  * @category Generation
  */
 export const generateApi = (
-  spec: OpenApiParser.OpenApiSpec,
+  spec: OpenApiParser.OpenApiSpec
 ): Effect.Effect<string, SchemaGenerator.SchemaGenerationError> =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const lines: Array<string> = []
 
     // Generate imports
-    lines.push("import * as HttpApi from '@effect/platform/HttpApi'",)
-    lines.push("import * as HttpApiEndpoint from '@effect/platform/HttpApiEndpoint'",)
-    lines.push("import * as HttpApiGroup from '@effect/platform/HttpApiGroup'",)
-    lines.push("import * as HttpApiSchema from '@effect/platform/HttpApiSchema'",)
-    lines.push("import * as Schema from 'effect/Schema'",)
-    lines.push('',)
+    lines.push("import * as HttpApi from '@effect/platform/HttpApi'")
+    lines.push("import * as HttpApiEndpoint from '@effect/platform/HttpApiEndpoint'")
+    lines.push("import * as HttpApiGroup from '@effect/platform/HttpApiGroup'")
+    lines.push("import * as HttpApiSchema from '@effect/platform/HttpApiSchema'")
+    lines.push("import * as Schema from 'effect/Schema'")
+    lines.push('')
 
     // Parse and generate schema definitions from components/schemas
-    const registry = yield* SchemaParser.parseComponents(spec,)
+    const registry = yield* SchemaParser.parseComponents(spec)
 
     if (registry.schemas.size > 0) {
-      lines.push('// Schema definitions from components/schemas',)
-      lines.push('',)
+      lines.push('// Schema definitions from components/schemas')
+      lines.push('')
 
       // Sort schemas topologically to ensure dependencies are declared first
-      const sortedSchemas = topologicalSort(registry.schemas,)
+      const sortedSchemas = topologicalSort(registry.schemas)
 
       // Generate named schemas in dependency order (exported inline)
-      for (const [name, schema,] of sortedSchemas) {
-        const schemaCode = yield* SchemaGenerator.generateNamedSchema(name, schema,)
-        lines.push(schemaCode,)
-        lines.push('',)
+      for (const [name, schema] of sortedSchemas) {
+        const schemaCode = yield* SchemaGenerator.generateNamedSchema(name, schema)
+        lines.push(schemaCode)
+        lines.push('')
       }
     }
 
     // Add API description as comment if present
     if (spec.info.description) {
-      lines.push('/**',)
-      lines.push(` * ${spec.info.description}`,)
-      lines.push(' *',)
-      lines.push(` * @version ${spec.info.version}`,)
-      lines.push(' */',)
+      lines.push('/**')
+      lines.push(` * ${spec.info.description}`)
+      lines.push(' *')
+      lines.push(` * @version ${spec.info.version}`)
+      lines.push(' */')
     }
 
     // Extract operations and group them
-    const operations = yield* PathParser.extractOperations(spec,)
-    const groups = yield* GroupGenerator.generateGroups(operations,)
+    const operations = yield* PathParser.extractOperations(spec)
+    const groups = yield* GroupGenerator.generateGroups(operations)
 
     // Generate group code (exported inline)
     for (const group of groups) {
-      const groupCode = yield* GroupGenerator.generateGroupCode(group,)
-      lines.push(groupCode,)
-      lines.push('',)
+      const groupCode = yield* GroupGenerator.generateGroupCode(group)
+      lines.push(groupCode)
+      lines.push('')
     }
 
     // Generate API name from title (remove spaces, keep alphanumeric)
-    const apiName = spec.info.title.replace(/[^a-zA-Z0-9]/g, '',)
+    const apiName = spec.info.title.replace(/[^a-zA-Z0-9]/g, '')
 
     // Generate the top-level API (exported)
     let apiCode = `export const ${apiName} = HttpApi.make('${apiName}')`
@@ -159,7 +159,7 @@ export const generateApi = (
       apiCode += `\n  .add(${group.varName}Group)`
     }
 
-    lines.push(apiCode,)
+    lines.push(apiCode)
 
-    return lines.join('\n',)
-  },)
+    return lines.join('\n')
+  })

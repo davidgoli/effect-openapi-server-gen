@@ -23,9 +23,9 @@ export interface GeneratedEndpoint {
 }
 
 export const generateEndpoint = (
-  operation: PathParser.ParsedOperation,
+  operation: PathParser.ParsedOperation
 ): Effect.Effect<GeneratedEndpoint, SchemaGenerator.SchemaGenerationError> =>
-  Effect.gen(function*() {
+  Effect.gen(function* () {
     const pathParamDeclarations: Array<string> = []
 
     // Generate path parameter definitions
@@ -34,9 +34,9 @@ export const generateEndpoint = (
     for (const param of operation.pathParameters) {
       const varName = `${operation.operationId}_${param.name}Param`
       // Path parameters are transmitted as strings in URLs, use generateQueryParamSchemaCode
-      const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!,)
-      pathParamDeclarations.push(`const ${varName} = HttpApiSchema.param('${param.name}', ${schemaCode})`,)
-      pathParams.push({ name: param.name, varName, },)
+      const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
+      pathParamDeclarations.push(`const ${varName} = HttpApiSchema.param('${param.name}', ${schemaCode})`)
+      pathParams.push({ name: param.name, varName })
     }
 
     // Generate the endpoint definition
@@ -53,14 +53,14 @@ export const generateEndpoint = (
     let endpointCode: string
     if (pathParams.length > 0) {
       // Use template string syntax for paths with parameters
-      const pathTemplate = operation.path.replace(/\{(\w+)\}/g, (_, paramName,) => {
-        const param = pathParams.find((p,) => p.name === paramName)
+      const pathTemplate = operation.path.replace(/\{(\w+)\}/g, (_, paramName) => {
+        const param = pathParams.find((p) => p.name === paramName)
         return param ? `\${${param.varName}}` : `{${paramName}}`
-      },)
-      endpointCode = `HttpApiEndpoint.${methodCall}('${operation.operationId}',)\`${pathTemplate}\``
+      })
+      endpointCode = `HttpApiEndpoint.${methodCall}('${operation.operationId}')\`${pathTemplate}\``
     } else {
       // Use two-argument form for paths without parameters
-      endpointCode = `HttpApiEndpoint.${methodCall}('${operation.operationId}', '${operation.path}',)`
+      endpointCode = `HttpApiEndpoint.${methodCall}('${operation.operationId}', '${operation.path}')`
     }
 
     // Add URL parameters (query params)
@@ -68,15 +68,13 @@ export const generateEndpoint = (
       const queryParamProps: Array<string> = []
       for (const param of operation.queryParameters) {
         // Use generateQueryParamSchemaCode for query parameters (NumberFromString, BooleanFromString, etc.)
-        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!,)
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
         const isRequired = param.required ?? false
-        const propCode = isRequired
-          ? `${param.name}: ${schemaCode}`
-          : `${param.name}: Schema.optional(${schemaCode})`
-        queryParamProps.push(propCode,)
+        const propCode = isRequired ? `${param.name}: ${schemaCode}` : `${param.name}: Schema.optional(${schemaCode})`
+        queryParamProps.push(propCode)
       }
 
-      endpointCode += `\n  .setUrlParams(Schema.Struct({\n    ${queryParamProps.join(',\n    ',)}\n  }))`
+      endpointCode += `\n  .setUrlParams(Schema.Struct({\n    ${queryParamProps.join(',\n    ')}\n  }))`
     }
 
     // Add header parameters
@@ -84,21 +82,21 @@ export const generateEndpoint = (
       const headerProps: Array<string> = []
       for (const param of operation.headerParameters) {
         // Headers are transmitted as strings, so use generateQueryParamSchemaCode
-        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!,)
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
         const isRequired = param.required ?? false
         // Header names should be quoted strings (e.g., 'X-API-Key')
         const propCode = isRequired
           ? `'${param.name}': ${schemaCode}`
           : `'${param.name}': Schema.optional(${schemaCode})`
-        headerProps.push(propCode,)
+        headerProps.push(propCode)
       }
 
-      endpointCode += `\n  .setHeaders(Schema.Struct({\n    ${headerProps.join(',\n    ',)}\n  }))`
+      endpointCode += `\n  .setHeaders(Schema.Struct({\n    ${headerProps.join(',\n    ')}\n  }))`
     }
 
     // Add request body (payload)
     if (operation.requestBody) {
-      const payloadCode = yield* SchemaGenerator.generateSchemaCode(operation.requestBody.schema,)
+      const payloadCode = yield* SchemaGenerator.generateSchemaCode(operation.requestBody.schema)
       endpointCode += `\n  .setPayload(${payloadCode})`
     }
 
@@ -107,17 +105,17 @@ export const generateEndpoint = (
       const statusCode = response.statusCode
 
       // Skip wildcard status codes (e.g., '5XX', '4XX') - these are invalid in OpenAPI 3.1
-      if (!/^\d+$/.test(statusCode,)) {
+      if (!/^\d+$/.test(statusCode)) {
         console.warn(
-          `⚠️  Skipping wildcard status code '${statusCode}' for operation '${operation.operationId}' - wildcard status codes are not supported`,
+          `⚠️  Skipping wildcard status code '${statusCode}' for operation '${operation.operationId}' - wildcard status codes are not supported`
         )
         continue
       }
 
-      const responseCode = yield* SchemaGenerator.generateSchemaCode(response.schema,)
-      const statusNum = parseInt(statusCode, 10,)
+      const responseCode = yield* SchemaGenerator.generateSchemaCode(response.schema)
+      const statusNum = parseInt(statusCode, 10)
 
-      if (statusCode.startsWith('2',)) {
+      if (statusCode.startsWith('2')) {
         // Success responses (2xx)
         if (statusCode === '200') {
           endpointCode += `\n  .addSuccess(${responseCode})`
@@ -130,5 +128,5 @@ export const generateEndpoint = (
       }
     }
 
-    return { pathParamDeclarations, endpointCode, }
-  },)
+    return { pathParamDeclarations, endpointCode }
+  })

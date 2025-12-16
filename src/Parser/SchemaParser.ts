@@ -20,18 +20,16 @@ export interface SchemaRegistry {
  * @since 1.0.0
  * @category Parsing
  */
-export const parseComponents = (
-  spec: OpenApiParser.OpenApiSpec,
-): Effect.Effect<SchemaRegistry> =>
+export const parseComponents = (spec: OpenApiParser.OpenApiSpec): Effect.Effect<SchemaRegistry> =>
   Effect.sync(() => {
     const schemas = new Map<string, OpenApiParser.SchemaObject>()
 
     // Check if spec has components and schemas
     if (spec.components?.schemas) {
-      for (const [name, schema,] of Object.entries(spec.components.schemas,)) {
-        schemas.set(name, schema,)
+      for (const [name, schema] of Object.entries(spec.components.schemas)) {
+        schemas.set(name, schema)
       }
     }
 
-    return { schemas, }
-  },)
+    return { schemas }
+  })

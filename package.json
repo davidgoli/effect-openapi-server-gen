@@ -22,6 +22,8 @@
     "check": "tsc -b tsconfig.json",
     "lint": "eslint \"**/{src,test,examples,scripts,dtslint}/**/*.{ts,mjs}\"",
     "lint-fix": "pnpm lint --fix",
+    "format": "prettier --write \"**/*.{ts,mjs,json,md}\"",
+    "format-check": "prettier --check \"**/*.{ts,mjs,json,md}\"",
     "test": "vitest",
     "coverage": "vitest --coverage"
   },
@@ -49,11 +51,13 @@
     "@typescript-eslint/parser": "^8.4.0",
     "babel-plugin-annotate-pure-calls": "^0.5.0",
     "eslint": "^9.10.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-codegen": "^0.28.0",
     "eslint-plugin-import": "^2.30.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sort-destructure-keys": "^2.0.0",
+    "prettier": "^3.7.4",
     "tsx": "^4.17.0",
     "typescript": "^5.6.2",
     "vitest": "^3.2.0"
