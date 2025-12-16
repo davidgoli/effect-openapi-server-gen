@@ -102,7 +102,7 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
           cookieParameters,
           requestBody,
           responses,
-          security,
+          ...(security ? { security } : {}),
         })
       }
     }

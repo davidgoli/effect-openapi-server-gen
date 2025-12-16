@@ -9,6 +9,9 @@
     "type": "git",
     "url": "<PLACEHOLDER>"
   },
+  "bin": {
+    "openapi-server-gen": "./dist/esm/CLI/Program.js"
+  },
   "publishConfig": {
     "access": "public",
     "directory": "dist"

@@ -101,7 +101,7 @@ const topologicalSort = (
  */
 export const generateApi = (
   spec: OpenApiParser.OpenApiSpec
-): Effect.Effect<string, SchemaGenerator.SchemaGenerationError> =>
+): Effect.Effect<string, SchemaGenerator.SchemaGenerationError | SecurityParser.SecurityParseError> =>
   Effect.gen(function* () {
     const lines: Array<string> = []
 

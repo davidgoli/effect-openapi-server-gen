@@ -175,7 +175,12 @@ export const parseSecuritySchemes = (
             return yield* new SecurityParseError({ message: `oauth2 scheme '${name}' missing 'flows' field` })
           }
 
-          const flows: OAuth2SecurityScheme['flows'] = {}
+          const flows: {
+            authorizationCode?: OAuth2Flow
+            implicit?: OAuth2Flow
+            password?: OAuth2Flow
+            clientCredentials?: OAuth2Flow
+          } = {}
 
           if (scheme.flows.authorizationCode) {
             flows.authorizationCode = {
@@ -215,7 +220,7 @@ export const parseSecuritySchemes = (
 
           schemes.set(name, {
             type: 'oauth2',
-            flows,
+            flows: flows as OAuth2SecurityScheme['flows'],
             description: scheme.description,
           })
           break

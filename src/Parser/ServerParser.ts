@@ -47,10 +47,7 @@ export const parseServers = (spec: OpenApiParser.OpenApiSpec): Effect.Effect<Par
       }
     }
 
-    return {
-      servers,
-      pathPrefix,
-    }
+    return pathPrefix !== undefined ? { servers, pathPrefix } : { servers }
   })
 
 /**

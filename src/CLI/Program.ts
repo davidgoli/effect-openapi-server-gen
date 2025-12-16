@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * @since 1.0.0
  */

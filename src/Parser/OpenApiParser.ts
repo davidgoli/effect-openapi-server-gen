@@ -154,6 +154,7 @@ export interface SchemaObject {
  */
 export interface ComponentsObject {
   readonly schemas?: Record<string, SchemaObject>
+  readonly securitySchemes?: Record<string, any>
 }
 
 /**
