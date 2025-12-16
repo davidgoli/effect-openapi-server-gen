@@ -64,7 +64,7 @@ export const extractOperations = (
 
         // Extract request body
         let requestBody: ParsedOperation["requestBody"] | undefined
-        if (operation.requestBody) {
+        if (operation.requestBody?.content) {
           const content = operation.requestBody.content["application/json"]
           if (content?.schema) {
             requestBody = {

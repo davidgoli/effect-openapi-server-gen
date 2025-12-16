@@ -80,7 +80,8 @@ export const main = (args: ReadonlyArray<string>): Effect.Effect<void> => {
 
 // Run the CLI if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-  Effect.runPromise(main(process.argv.slice(2))).catch(() => {
+  Effect.runPromise(main(process.argv.slice(2))).catch((error) => {
+    console.error("❌ Unexpected error:", error)
     process.exit(1)
   })
 }
