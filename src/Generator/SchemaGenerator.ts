@@ -266,7 +266,17 @@ export const generateNamedSchema = (
   Effect.gen(function* () {
     const schemaCode = yield* generateSchemaCode(schema)
     const sanitizedName = sanitizeIdentifier(name)
-    return `export const ${sanitizedName}Schema = ${schemaCode}`
+
+    // Generate JSDoc if schema has a description
+    const lines: Array<string> = []
+    if (schema.description) {
+      lines.push('/**')
+      lines.push(` * ${schema.description}`)
+      lines.push(' */')
+    }
+
+    lines.push(`export const ${sanitizedName}Schema = ${schemaCode}`)
+    return lines.join('\n')
   })
 
 /**

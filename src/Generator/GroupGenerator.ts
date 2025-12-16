@@ -124,6 +124,9 @@ export const generateGroupCode = (
       }
 
       // Then add the endpoint definition (exported)
+      if (generated.jsdocComment) {
+        lines.push(generated.jsdocComment)
+      }
       lines.push(`export const ${varName} = ${generated.endpointCode}`)
       lines.push('')
       endpointVars.push(varName)

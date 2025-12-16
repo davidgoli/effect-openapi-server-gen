@@ -19,7 +19,31 @@ import * as SchemaGenerator from './SchemaGenerator.js'
  */
 export interface GeneratedEndpoint {
   readonly pathParamDeclarations: ReadonlyArray<string>
+  readonly jsdocComment?: string
   readonly endpointCode: string
+}
+
+/**
+ * Generate JSDoc comment for an endpoint
+ */
+const generateJSDoc = (operation: PathParser.ParsedOperation): string | undefined => {
+  const lines: Array<string> = []
+
+  // Add summary or description
+  if (operation.summary || operation.description) {
+    lines.push('/**')
+    if (operation.summary) {
+      lines.push(` * ${operation.summary}`)
+    }
+    if (operation.description && operation.description !== operation.summary) {
+      if (operation.summary) lines.push(' *')
+      lines.push(` * ${operation.description}`)
+    }
+    lines.push(' */')
+    return lines.join('\n')
+  }
+
+  return undefined
 }
 
 export const generateEndpoint = (
@@ -27,6 +51,9 @@ export const generateEndpoint = (
 ): Effect.Effect<GeneratedEndpoint, SchemaGenerator.SchemaGenerationError> =>
   Effect.gen(function* () {
     const pathParamDeclarations: Array<string> = []
+
+    // Generate JSDoc comment
+    const jsdocComment = generateJSDoc(operation)
 
     // Generate path parameter definitions
     // Make parameter names unique by prefixing with operation ID to avoid collisions
@@ -128,5 +155,9 @@ export const generateEndpoint = (
       }
     }
 
-    return { pathParamDeclarations, endpointCode }
+    return {
+      pathParamDeclarations,
+      ...(jsdocComment ? { jsdocComment } : {}),
+      endpointCode,
+    }
   })
