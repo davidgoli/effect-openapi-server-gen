@@ -4,11 +4,11 @@ Generate type-safe [Effect](https://effect.website) HttpServer implementations f
 
 ## Features
 
-- ✨ **Complete Type Safety**: Generated code provides full TypeScript inference from OpenAPI spec to handler implementation
+- ✨ **Type Safe**: Generated code provides full TypeScript inference from OpenAPI spec to handler implementation
 - 🔧 **Effect Schema Validation**: All request/response validation powered by [@effect/schema](https://effect.website/docs/schema/introduction)
 - 🎯 **Clean Generated Code**: Single file output with no manual edits required
 - 📦 **OpenAPI 3.1 Support**: Full support for modern OpenAPI features
-- 🚀 **Ready for Production**: TDD implementation with 168+ passing tests
+- 🚀 **Tested**: TDD implementation with 168+ passing tests
 
 ## What Gets Generated
 

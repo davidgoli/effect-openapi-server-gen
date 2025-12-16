@@ -12,6 +12,7 @@ import * as YAML from 'yaml'
 export interface OpenApiSpec {
   readonly openapi: string
   readonly info: InfoObject
+  readonly servers?: ReadonlyArray<ServerObject>
   readonly paths: PathsObject
   readonly components?: ComponentsObject
 }
@@ -23,6 +24,15 @@ export interface OpenApiSpec {
 export interface InfoObject {
   readonly title: string
   readonly version: string
+  readonly description?: string
+}
+
+/**
+ * @since 1.0.0
+ * @category Models
+ */
+export interface ServerObject {
+  readonly url: string
   readonly description?: string
 }
 

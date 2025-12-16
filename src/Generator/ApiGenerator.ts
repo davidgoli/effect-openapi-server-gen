@@ -6,6 +6,7 @@ import type * as OpenApiParser from '../Parser/OpenApiParser.js'
 import * as PathParser from '../Parser/PathParser.js'
 import * as SchemaParser from '../Parser/SchemaParser.js'
 import * as SecurityParser from '../Parser/SecurityParser.js'
+import * as ServerParser from '../Parser/ServerParser.js'
 import * as GroupGenerator from './GroupGenerator.js'
 import * as SchemaGenerator from './SchemaGenerator.js'
 
@@ -111,6 +112,14 @@ export const generateApi = (
     lines.push("import * as HttpApiSchema from '@effect/platform/HttpApiSchema'")
     lines.push("import * as Schema from 'effect/Schema'")
     lines.push('')
+
+    // Parse servers and generate documentation
+    const servers = yield* ServerParser.parseServers(spec)
+    const serversDoc = ServerParser.generateServersDoc(servers)
+    if (serversDoc) {
+      lines.push(serversDoc)
+      lines.push('')
+    }
 
     // Parse security schemes
     const security = yield* SecurityParser.parseSecurity(spec)
