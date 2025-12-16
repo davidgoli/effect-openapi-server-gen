@@ -156,7 +156,7 @@ export const generateApi = (
     let apiCode = `export const ${apiName} = HttpApi.make('${apiName}')`
 
     for (const group of groups) {
-      apiCode += `\n  .add(${group.varName}Group,)`
+      apiCode += `\n  .add(${group.varName}Group)`
     }
 
     lines.push(apiCode,)
