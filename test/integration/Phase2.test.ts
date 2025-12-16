@@ -163,6 +163,18 @@ describe('Phase 2 - Schema Components & References', () => {
         expect(apiCode).toContain('`/pets/${petIdParam}`')
         expect(apiCode).toContain('.addSuccess(PetSchema)')
       }))
+
+    it('should generate JSDoc comments for properties with descriptions', () =>
+      Effect.gen(function* () {
+        const specContent = readFixture('petstore.yaml')
+        const spec = yield* OpenApiParser.parse(specContent)
+        const apiCode = yield* ApiGenerator.generateApi(spec)
+
+        // Should have JSDoc comments for property descriptions
+        expect(apiCode).toMatch(/\/\*\* Pet ID \*\//)
+        expect(apiCode).toMatch(/\/\*\* Pet name \*\//)
+        expect(apiCode).toMatch(/\/\*\* Pet status \*\//)
+      }))
   })
 
   describe('circular-refs.yaml', () => {

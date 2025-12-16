@@ -228,7 +228,17 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
 
         // Quote property name if it contains special characters or is a reserved word
         const propertyName = needsQuoting(name) ? `'${name}'` : name
-        propertyEntries.push(`${propertyName}: ${propCode}`)
+
+        // Add JSDoc comment if property has a description
+        let propertyEntry = ''
+        if (propSchema.description) {
+          const escapedDescription = propSchema.description.replace(/\*\//g, '*\\/') // Escape closing comment
+          propertyEntry = `/** ${escapedDescription} */\n  ${propertyName}: ${propCode}`
+        } else {
+          propertyEntry = `${propertyName}: ${propCode}`
+        }
+
+        propertyEntries.push(propertyEntry)
       }
 
       const structCode = `Schema.Struct({\n  ${propertyEntries.join(',\n  ')}\n})`
