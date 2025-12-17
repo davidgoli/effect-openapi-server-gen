@@ -968,6 +968,56 @@ describe('SchemaGenerator', () => {
       }))
   })
 
+  describe('JSDoc generation - Phase 10', () => {
+    it.effect('should generate JSDoc for named schemas with descriptions', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'object',
+          description: 'A user profile entity',
+          properties: {
+            id: { type: 'string' },
+          },
+          required: ['id'],
+        }
+
+        const result = yield* SchemaGenerator.generateNamedSchema('User', schema)
+
+        // Should have JSDoc comment with description
+        expect(result).toContain('/**')
+        expect(result).toContain('* A user profile entity')
+        expect(result).toContain('*/')
+      }))
+
+    it.effect('should generate @deprecated annotation for deprecated schemas', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          deprecated: true,
+        }
+
+        const result = yield* SchemaGenerator.generateNamedSchema('LegacyId', schema)
+
+        // Should have @deprecated annotation
+        expect(result).toContain('@deprecated')
+        expect(result).toContain('This schema is deprecated')
+      }))
+
+    it.effect('should combine description and deprecated annotation', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          description: 'Old identifier format',
+          deprecated: true,
+        }
+
+        const result = yield* SchemaGenerator.generateNamedSchema('OldId', schema)
+
+        // Should have both description and deprecated
+        expect(result).toContain('Old identifier format')
+        expect(result).toContain('@deprecated')
+      }))
+  })
+
   describe('logging warnings', () => {
     it.effect('should log warning when schema name is sanitized', () =>
       Effect.gen(function* () {
