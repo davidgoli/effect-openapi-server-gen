@@ -132,9 +132,7 @@ export const parseSecuritySchemes = (
 
     const schemes = new Map<string, SecurityScheme>()
 
-    for (const [name, schemeObj] of Object.entries(components.securitySchemes)) {
-      const scheme = schemeObj as any
-
+    for (const [name, scheme] of Object.entries(components.securitySchemes)) {
       if (!scheme.type) {
         return yield* new SecurityParseError({ message: `Security scheme '${name}' missing type` })
       }
@@ -151,7 +149,7 @@ export const parseSecuritySchemes = (
             type: 'apiKey',
             name: scheme.name,
             in: scheme.in,
-            description: scheme.description,
+            ...(scheme.description ? { description: scheme.description } : {}),
           })
           break
         }
@@ -164,8 +162,8 @@ export const parseSecuritySchemes = (
           schemes.set(name, {
             type: 'http',
             scheme: scheme.scheme,
-            bearerFormat: scheme.bearerFormat,
-            description: scheme.description,
+            ...(scheme.bearerFormat ? { bearerFormat: scheme.bearerFormat } : {}),
+            ...(scheme.description ? { description: scheme.description } : {}),
           })
           break
         }
@@ -186,7 +184,9 @@ export const parseSecuritySchemes = (
             flows.authorizationCode = {
               authorizationUrl: scheme.flows.authorizationCode.authorizationUrl,
               tokenUrl: scheme.flows.authorizationCode.tokenUrl,
-              refreshUrl: scheme.flows.authorizationCode.refreshUrl,
+              ...(scheme.flows.authorizationCode.refreshUrl
+                ? { refreshUrl: scheme.flows.authorizationCode.refreshUrl }
+                : {}),
               scopes: scheme.flows.authorizationCode.scopes || {},
             }
           }
@@ -194,26 +194,25 @@ export const parseSecuritySchemes = (
           if (scheme.flows.implicit) {
             flows.implicit = {
               authorizationUrl: scheme.flows.implicit.authorizationUrl,
-              tokenUrl: scheme.flows.implicit.tokenUrl,
-              refreshUrl: scheme.flows.implicit.refreshUrl,
+              ...(scheme.flows.implicit.refreshUrl ? { refreshUrl: scheme.flows.implicit.refreshUrl } : {}),
               scopes: scheme.flows.implicit.scopes || {},
             }
           }
 
           if (scheme.flows.password) {
             flows.password = {
-              authorizationUrl: scheme.flows.password.authorizationUrl,
               tokenUrl: scheme.flows.password.tokenUrl,
-              refreshUrl: scheme.flows.password.refreshUrl,
+              ...(scheme.flows.password.refreshUrl ? { refreshUrl: scheme.flows.password.refreshUrl } : {}),
               scopes: scheme.flows.password.scopes || {},
             }
           }
 
           if (scheme.flows.clientCredentials) {
             flows.clientCredentials = {
-              authorizationUrl: scheme.flows.clientCredentials.authorizationUrl,
               tokenUrl: scheme.flows.clientCredentials.tokenUrl,
-              refreshUrl: scheme.flows.clientCredentials.refreshUrl,
+              ...(scheme.flows.clientCredentials.refreshUrl
+                ? { refreshUrl: scheme.flows.clientCredentials.refreshUrl }
+                : {}),
               scopes: scheme.flows.clientCredentials.scopes || {},
             }
           }
@@ -221,7 +220,7 @@ export const parseSecuritySchemes = (
           schemes.set(name, {
             type: 'oauth2',
             flows: flows as OAuth2SecurityScheme['flows'],
-            description: scheme.description,
+            ...(scheme.description ? { description: scheme.description } : {}),
           })
           break
         }
@@ -236,13 +235,15 @@ export const parseSecuritySchemes = (
           schemes.set(name, {
             type: 'openIdConnect',
             openIdConnectUrl: scheme.openIdConnectUrl,
-            description: scheme.description,
+            ...(scheme.description ? { description: scheme.description } : {}),
           })
           break
         }
 
         default:
-          return yield* new SecurityParseError({ message: `Unknown security scheme type: ${scheme.type}` })
+          return yield* new SecurityParseError({
+            message: `Unknown security scheme type: ${(scheme as { type: string }).type}`,
+          })
       }
     }
 
@@ -274,7 +275,7 @@ export const parseSecurityRequirements = (
 export const parseSecurity = (spec: OpenApiParser.OpenApiSpec): Effect.Effect<ParsedSecurity, SecurityParseError> =>
   Effect.gen(function* () {
     const schemes = yield* parseSecuritySchemes(spec.components)
-    const globalRequirements = parseSecurityRequirements((spec as any).security)
+    const globalRequirements = parseSecurityRequirements(spec.security)
 
     return {
       schemes,

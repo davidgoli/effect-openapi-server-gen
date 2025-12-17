@@ -156,7 +156,7 @@ describe('SchemaGenerator', () => {
     it('should fail for unsupported type', () =>
       Effect.gen(function* () {
         const schema: OpenApiParser.SchemaObject = {
-          type: 'unknown' as any,
+          type: 'unknown',
         }
 
         const result = yield* Effect.flip(SchemaGenerator.generateSchemaCode(schema))

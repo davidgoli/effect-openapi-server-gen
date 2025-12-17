@@ -15,6 +15,7 @@ export interface OpenApiSpec {
   readonly servers?: ReadonlyArray<ServerObject>
   readonly paths: PathsObject
   readonly components?: ComponentsObject
+  readonly security?: ReadonlyArray<Record<string, ReadonlyArray<string>>>
 }
 
 /**
@@ -68,6 +69,8 @@ export interface OperationObject {
   readonly parameters?: ReadonlyArray<ParameterObject>
   readonly requestBody?: RequestBodyObject
   readonly responses: ResponsesObject
+  readonly security?: ReadonlyArray<Record<string, ReadonlyArray<string>>>
+  readonly deprecated?: boolean
 }
 
 /**
@@ -146,7 +149,80 @@ export interface SchemaObject {
   readonly anyOf?: ReadonlyArray<SchemaObject>
   // Custom extensions
   readonly 'x-circular'?: ReadonlyArray<string>
+  readonly deprecated?: boolean
 }
+
+/**
+ * Raw OpenAPI security scheme objects (before parsing into SecurityScheme types)
+ *
+ * @since 1.0.0
+ * @category Models
+ */
+export interface RawApiKeyScheme {
+  readonly type: 'apiKey'
+  readonly name: string
+  readonly in: 'query' | 'header' | 'cookie'
+  readonly description?: string
+}
+
+/**
+ * @since 1.0.0
+ * @category Models
+ */
+export interface RawHttpScheme {
+  readonly type: 'http'
+  readonly scheme: string
+  readonly bearerFormat?: string
+  readonly description?: string
+}
+
+/**
+ * @since 1.0.0
+ * @category Models
+ */
+export interface RawOAuth2Scheme {
+  readonly type: 'oauth2'
+  readonly flows: {
+    readonly implicit?: {
+      readonly authorizationUrl: string
+      readonly scopes: Record<string, string>
+      readonly refreshUrl?: string
+    }
+    readonly password?: {
+      readonly tokenUrl: string
+      readonly scopes: Record<string, string>
+      readonly refreshUrl?: string
+    }
+    readonly clientCredentials?: {
+      readonly tokenUrl: string
+      readonly scopes: Record<string, string>
+      readonly refreshUrl?: string
+    }
+    readonly authorizationCode?: {
+      readonly authorizationUrl: string
+      readonly tokenUrl: string
+      readonly scopes: Record<string, string>
+      readonly refreshUrl?: string
+    }
+  }
+  readonly description?: string
+}
+
+/**
+ * @since 1.0.0
+ * @category Models
+ */
+export interface RawOpenIdConnectScheme {
+  readonly type: 'openIdConnect'
+  readonly openIdConnectUrl: string
+  readonly description?: string
+}
+
+/**
+ * @since 1.0.0
+ * @category Models
+ */
+export type RawSecurityScheme = RawApiKeyScheme | RawHttpScheme | RawOAuth2Scheme | RawOpenIdConnectScheme
 
 /**
  * @since 1.0.0
@@ -154,7 +230,7 @@ export interface SchemaObject {
  */
 export interface ComponentsObject {
   readonly schemas?: Record<string, SchemaObject>
-  readonly securitySchemes?: Record<string, any>
+  readonly securitySchemes?: Record<string, RawSecurityScheme>
 }
 
 /**

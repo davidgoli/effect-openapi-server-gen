@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@effect/vitest'
 import * as Effect from 'effect/Effect'
+import type * as OpenApiParser from '../../../src/Parser/OpenApiParser.js'
 import * as SecurityParser from '../../../src/Parser/SecurityParser.js'
 
 describe('SecurityParser', () => {
@@ -12,7 +13,7 @@ describe('SecurityParser', () => {
 
     it('should parse apiKey scheme with header location', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             apiKeyAuth: {
               type: 'apiKey',
@@ -23,7 +24,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         expect(result.size).toBe(1)
         const scheme = result.get('apiKeyAuth')
@@ -37,7 +38,7 @@ describe('SecurityParser', () => {
 
     it('should parse apiKey scheme with query location', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             apiKeyQuery: {
               type: 'apiKey',
@@ -47,17 +48,17 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         const scheme = result.get('apiKeyQuery')
         expect(scheme?.type).toBe('apiKey')
-        expect((scheme as any)?.in).toBe('query')
-        expect((scheme as any)?.name).toBe('api_key')
+        expect(scheme?.type === 'apiKey' ? scheme.in : undefined).toBe('query')
+        expect(scheme?.type === 'apiKey' ? scheme.name : undefined).toBe('api_key')
       }))
 
     it('should parse apiKey scheme with cookie location', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             apiKeyCookie: {
               type: 'apiKey',
@@ -67,16 +68,17 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         const scheme = result.get('apiKeyCookie')
-        expect((scheme as any)?.in).toBe('cookie')
+        expect(scheme?.type === 'apiKey' ? scheme.in : undefined).toBe('cookie')
       }))
 
     it('should fail when apiKey scheme missing name', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
+            // @ts-expect-error - Testing invalid scheme missing required 'name' field
             apiKeyAuth: {
               type: 'apiKey',
               in: 'header',
@@ -84,7 +86,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components as any))
+        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components))
 
         expect(result._tag).toBe('SecurityParseError')
         expect(result.message).toContain('missing required fields')
@@ -92,7 +94,7 @@ describe('SecurityParser', () => {
 
     it('should parse http bearer scheme', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             bearerAuth: {
               type: 'http',
@@ -103,7 +105,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         const scheme = result.get('bearerAuth')
         expect(scheme).toEqual({
@@ -116,7 +118,7 @@ describe('SecurityParser', () => {
 
     it('should parse http basic scheme', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             basicAuth: {
               type: 'http',
@@ -125,24 +127,25 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         const scheme = result.get('basicAuth')
         expect(scheme?.type).toBe('http')
-        expect((scheme as any)?.scheme).toBe('basic')
+        expect(scheme?.type === 'http' ? scheme.scheme : undefined).toBe('basic')
       }))
 
     it('should fail when http scheme missing scheme field', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
+            // @ts-expect-error - Testing invalid scheme missing required 'scheme' field
             httpAuth: {
               type: 'http',
             },
           },
         }
 
-        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components as any))
+        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components))
 
         expect(result._tag).toBe('SecurityParseError')
         expect(result.message).toContain("missing 'scheme' field")
@@ -150,7 +153,7 @@ describe('SecurityParser', () => {
 
     it('should parse oauth2 authorization code flow', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             oauth2: {
               type: 'oauth2',
@@ -169,7 +172,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         const scheme = result.get('oauth2') as SecurityParser.OAuth2SecurityScheme
         expect(scheme.type).toBe('oauth2')
@@ -184,7 +187,7 @@ describe('SecurityParser', () => {
 
     it('should parse oauth2 client credentials flow', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             oauth2: {
               type: 'oauth2',
@@ -200,7 +203,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         const scheme = result.get('oauth2') as SecurityParser.OAuth2SecurityScheme
         expect(scheme.flows.clientCredentials).toBeDefined()
@@ -209,15 +212,16 @@ describe('SecurityParser', () => {
 
     it('should fail when oauth2 scheme missing flows', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
+            // @ts-expect-error - Testing invalid scheme missing required 'flows' field
             oauth2: {
               type: 'oauth2',
             },
           },
         }
 
-        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components as any))
+        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components))
 
         expect(result._tag).toBe('SecurityParseError')
         expect(result.message).toContain("missing 'flows' field")
@@ -225,7 +229,7 @@ describe('SecurityParser', () => {
 
     it('should parse openIdConnect scheme', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             openId: {
               type: 'openIdConnect',
@@ -235,7 +239,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         const scheme = result.get('openId')
         expect(scheme).toEqual({
@@ -247,15 +251,16 @@ describe('SecurityParser', () => {
 
     it('should fail when openIdConnect scheme missing URL', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
+            // @ts-expect-error - Testing invalid scheme missing required 'openIdConnectUrl' field
             openId: {
               type: 'openIdConnect',
             },
           },
         }
 
-        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components as any))
+        const result = yield* Effect.flip(SecurityParser.parseSecuritySchemes(components))
 
         expect(result._tag).toBe('SecurityParseError')
         expect(result.message).toContain("missing 'openIdConnectUrl' field")
@@ -263,7 +268,7 @@ describe('SecurityParser', () => {
 
     it('should parse multiple security schemes', () =>
       Effect.gen(function* () {
-        const components = {
+        const components: OpenApiParser.ComponentsObject = {
           securitySchemes: {
             apiKey: {
               type: 'apiKey',
@@ -287,7 +292,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecuritySchemes(components as any)
+        const result = yield* SecurityParser.parseSecuritySchemes(components)
 
         expect(result.size).toBe(3)
         expect(result.get('apiKey')?.type).toBe('apiKey')
@@ -341,7 +346,7 @@ describe('SecurityParser', () => {
   describe('parseSecurity', () => {
     it('should parse complete security configuration', () =>
       Effect.gen(function* () {
-        const spec = {
+        const spec: OpenApiParser.OpenApiSpec = {
           openapi: '3.1.0',
           info: { title: 'Test', version: '1.0.0' },
           paths: {},
@@ -357,7 +362,7 @@ describe('SecurityParser', () => {
           },
         }
 
-        const result = yield* SecurityParser.parseSecurity(spec as any)
+        const result = yield* SecurityParser.parseSecurity(spec)
 
         expect(result.schemes.size).toBe(1)
         expect(result.globalRequirements).toEqual([{ apiKeyAuth: [] }])

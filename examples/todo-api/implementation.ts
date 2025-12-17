@@ -142,8 +142,7 @@ const TodosLive = HttpApiBuilder.group(TodoAPI, 'Todos', (handlers) =>
       .handle('deleteTodo', ({ path }) =>
         Effect.gen(function* () {
           yield* store.delete(path.id)
-          // For 204 No Content, return undefined
-          return undefined as any
+          // For 204 No Content, return void
         })
       )
   })

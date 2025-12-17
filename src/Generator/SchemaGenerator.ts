@@ -103,8 +103,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
     // Handle nullable types (OpenAPI 3.0 style)
     if (schema.nullable === true) {
       // Remove nullable flag and generate base schema
-      const baseSchema = { ...schema }
-      delete (baseSchema as any).nullable
+      const { nullable: _nullable, ...baseSchema } = schema
       const baseCode = yield* generateSchemaCode(baseSchema)
       return `Schema.Union(${baseCode}, Schema.Null)`
     }
@@ -199,7 +198,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
     if (schema.type === 'object' || schema.properties !== undefined) {
       const properties = schema.properties || {}
       const required = schema.required || []
-      const circularProps = (schema as any)['x-circular'] || []
+      const circularProps = schema['x-circular'] || []
 
       if (Object.keys(properties).length === 0) {
         return addAnnotations('Schema.Struct({})', schema)
@@ -286,7 +285,7 @@ export const generateNamedSchema = (
 
     // Generate JSDoc if schema has a description or is deprecated
     const lines: Array<string> = []
-    const isDeprecated = (schema as any).deprecated === true
+    const isDeprecated = schema.deprecated === true
 
     if (schema.description || isDeprecated) {
       lines.push('/**')

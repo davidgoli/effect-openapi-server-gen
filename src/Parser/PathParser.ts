@@ -84,17 +84,15 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
         }
 
         // Extract security requirements (if specified at operation level)
-        const security = (operation as any).security
-          ? ((operation as any).security as ReadonlyArray<Record<string, ReadonlyArray<string>>>)
-          : undefined
+        const security = operation.security
 
         operations.push({
           operationId: operation.operationId,
           method,
           path,
-          summary: operation.summary,
-          description: operation.description,
-          deprecated: (operation as any).deprecated,
+          ...(operation.summary ? { summary: operation.summary } : {}),
+          ...(operation.description ? { description: operation.description } : {}),
+          ...(operation.deprecated ? { deprecated: operation.deprecated } : {}),
           tags: operation.tags || [],
           pathParameters,
           queryParameters,
