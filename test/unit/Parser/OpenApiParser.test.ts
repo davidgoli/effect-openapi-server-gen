@@ -54,10 +54,10 @@ paths: {}
         expect(result.message).toContain('openapi')
       }))
 
-    it('should fail if openapi version is not 3.1.x', () =>
+    it('should fail if openapi version is not 3.x', () =>
       Effect.gen(function* () {
         const spec = {
-          openapi: '3.0.0',
+          openapi: '2.0.0',
           info: {
             title: 'Test API',
             version: '1.0.0',
@@ -67,7 +67,62 @@ paths: {}
 
         const result = yield* Effect.flip(OpenApiParser.parse(JSON.stringify(spec)))
 
-        expect(result.message).toContain('3.1')
+        expect(result.message).toContain('Unsupported')
+        expect(result.message).toContain('2.0.0')
+      }))
+
+    it.effect('should parse OpenAPI 3.0.x specifications', () =>
+      Effect.gen(function* () {
+        const spec = {
+          openapi: '3.0.3',
+          info: {
+            title: 'Test API',
+            version: '1.0.0',
+          },
+          paths: {},
+        }
+
+        const result = yield* OpenApiParser.parse(JSON.stringify(spec))
+
+        expect(result.openapi).toBe('3.0.3')
+        expect(result.info.title).toBe('Test API')
+      }))
+
+    it.effect('should handle nullable property (OpenAPI 3.0 style)', () =>
+      Effect.gen(function* () {
+        const spec = {
+          openapi: '3.0.0',
+          info: {
+            title: 'Test API',
+            version: '1.0.0',
+          },
+          paths: {
+            '/users': {
+              get: {
+                operationId: 'getUser',
+                responses: {
+                  '200': {
+                    description: 'Success',
+                    content: {
+                      'application/json': {
+                        schema: {
+                          type: 'string',
+                          nullable: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }
+
+        const result = yield* OpenApiParser.parse(JSON.stringify(spec))
+
+        // nullable is a valid property in 3.0 style
+        const responseSchema = result.paths['/users'].get?.responses['200']?.content?.['application/json']?.schema
+        expect(responseSchema?.nullable).toBe(true)
       }))
 
     it('should fail if info section is missing', () =>

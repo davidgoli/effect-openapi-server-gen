@@ -288,9 +288,9 @@ export const parse = (content: string): Effect.Effect<OpenApiSpec, ParseError> =
       return yield* new ParseError({ message: 'Missing required field: openapi' })
     }
 
-    if (!obj.openapi.startsWith('3.1')) {
+    if (!obj.openapi.startsWith('3.')) {
       return yield* new ParseError({
-        message: `Unsupported OpenAPI version: ${obj.openapi}. Only OpenAPI 3.1.x is supported.`,
+        message: `Unsupported OpenAPI version: ${obj.openapi}. Only OpenAPI 3.x is supported.`,
       })
     }
 
