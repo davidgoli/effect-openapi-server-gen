@@ -385,21 +385,10 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('Schema.pattern')
         expect(result).toContain('^[a-zA-Z0-9]+$')
       }))
+  })
 
-    it('should handle email format', () =>
-      Effect.gen(function* () {
-        const schema: OpenApiParser.SchemaObject = {
-          type: 'string',
-          format: 'email',
-        }
-
-        const result = yield* SchemaGenerator.generateSchemaCode(schema)
-
-        // Should use a specialized schema for email
-        expect(result).toContain('String')
-      }))
-
-    it('should handle uuid format', () =>
+  describe('string format support - Phase 5', () => {
+    it.effect('should generate Schema.UUID for uuid format', () =>
       Effect.gen(function* () {
         const schema: OpenApiParser.SchemaObject = {
           type: 'string',
@@ -408,7 +397,111 @@ describe('SchemaGenerator', () => {
 
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
-        expect(result).toContain('String')
+        expect(result).toBe('Schema.UUID')
+      }))
+
+    it.effect('should generate email validation for email format', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'email',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should use pattern validation for email
+        expect(result).toContain('Schema.String')
+        expect(result).toContain('Schema.pattern')
+      }))
+
+    it.effect('should generate Schema.DateTimeUtc for date-time format', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'date-time',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.DateTimeUtc')
+      }))
+
+    it.effect('should generate Schema.DateFromString for date format', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'date',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.DateFromString')
+      }))
+
+    it.effect('should generate Schema.URL for uri format', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'uri',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.URL')
+      }))
+
+    it.effect('should generate Schema.URL for url format', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'url',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.URL')
+      }))
+
+    it.effect('should fall back to Schema.String for unknown formats', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'unknown-custom-format',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.String')
+      }))
+
+    it.effect('should combine format with other constraints when applicable', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'email',
+          minLength: 5,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.String')
+        expect(result).toContain('Schema.pattern')
+        expect(result).toContain('Schema.minLength')
+      }))
+
+    it.effect('should add description annotation to format schemas', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          format: 'uuid',
+          description: 'User unique identifier',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.UUID')
+        expect(result).toContain('.annotations')
+        expect(result).toContain('User unique identifier')
       }))
   })
 

@@ -124,6 +124,42 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
 
     // Handle primitive types with validation
     if (schema.type === 'string') {
+      // Handle format-specific schemas first
+      if (schema.format) {
+        switch (schema.format) {
+          case 'uuid':
+            return addAnnotations('Schema.UUID', schema)
+          case 'date-time':
+            return addAnnotations('Schema.DateTimeUtc', schema)
+          case 'date':
+            return addAnnotations('Schema.DateFromString', schema)
+          case 'uri':
+          case 'url':
+            return addAnnotations('Schema.URL', schema)
+          case 'email': {
+            // Use pattern validation for email (simplified RFC 5322 pattern)
+            const emailPattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$'
+            let code = `Schema.String.pipe(Schema.pattern(new RegExp('${emailPattern}')))`
+
+            // Email format can still have additional string constraints
+            const filters: Array<string> = []
+            if (schema.minLength !== undefined) {
+              filters.push(`Schema.minLength(${schema.minLength})`)
+            }
+            if (schema.maxLength !== undefined) {
+              filters.push(`Schema.maxLength(${schema.maxLength})`)
+            }
+
+            if (filters.length > 0) {
+              code = `Schema.String.pipe(Schema.pattern(new RegExp('${emailPattern}')), ${filters.join(', ')})`
+            }
+
+            return addAnnotations(code, schema)
+          }
+          // Unknown formats fall through to default string handling
+        }
+      }
+
       let code = 'Schema.String'
 
       // Apply validation filters
