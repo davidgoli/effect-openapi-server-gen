@@ -147,6 +147,8 @@ export interface SchemaObject {
   readonly minItems?: number
   readonly maxItems?: number
   readonly uniqueItems?: boolean
+  // Object additional properties
+  readonly additionalProperties?: boolean | SchemaObject
   // Schema combinators
   readonly allOf?: ReadonlyArray<SchemaObject>
   readonly oneOf?: ReadonlyArray<SchemaObject>

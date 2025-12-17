@@ -596,6 +596,84 @@ describe('SchemaGenerator', () => {
       }))
   })
 
+  describe('additionalProperties support - Phase 7', () => {
+    it.effect('should generate Schema.Record for additionalProperties: true', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'object',
+          additionalProperties: true,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.Record({ key: Schema.String, value: Schema.Unknown })')
+      }))
+
+    it.effect('should generate typed Schema.Record for additionalProperties with schema', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'object',
+          additionalProperties: {
+            type: 'string',
+          },
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.Record({ key: Schema.String, value: Schema.String })')
+      }))
+
+    it.effect('should not generate Record for additionalProperties: false', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'object',
+          additionalProperties: false,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.Struct({})')
+      }))
+
+    it.effect('should combine properties with additionalProperties', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+          },
+          required: ['name'],
+          additionalProperties: {
+            type: 'number',
+          },
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should use Schema.extend to combine Struct with Record
+        expect(result).toContain('Schema.extend')
+        expect(result).toContain('name: Schema.String')
+        expect(result).toContain('Schema.Record({ key: Schema.String, value: Schema.Number })')
+      }))
+
+    it.effect('should add description annotation to Record schema', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'object',
+          additionalProperties: {
+            type: 'string',
+          },
+          description: 'A string map',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.Record({ key: Schema.String, value: Schema.String })')
+        expect(result).toContain('.annotations')
+        expect(result).toContain('A string map')
+      }))
+  })
+
   describe('number validation - Phase 3', () => {
     it('should handle minimum constraint', () =>
       Effect.gen(function* () {

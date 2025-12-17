@@ -313,15 +313,33 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
     }
 
     // Handle object type
-    if (schema.type === 'object' || schema.properties !== undefined) {
+    if (schema.type === 'object' || schema.properties !== undefined || schema.additionalProperties !== undefined) {
       const properties = schema.properties || {}
       const required = schema.required || []
       const circularProps = schema['x-circular'] || []
+      const hasProperties = Object.keys(properties).length > 0
 
-      if (Object.keys(properties).length === 0) {
+      // Handle additionalProperties
+      let recordCode: string | undefined
+      if (schema.additionalProperties !== undefined && schema.additionalProperties !== false) {
+        if (schema.additionalProperties === true) {
+          recordCode = 'Schema.Record({ key: Schema.String, value: Schema.Unknown })'
+        } else {
+          // additionalProperties is a schema object
+          const valueCode = yield* generateSchemaCode(schema.additionalProperties)
+          recordCode = `Schema.Record({ key: Schema.String, value: ${valueCode} })`
+        }
+      }
+
+      // If no properties, return just the record or empty struct
+      if (!hasProperties) {
+        if (recordCode) {
+          return addAnnotations(recordCode, schema)
+        }
         return addAnnotations('Schema.Struct({})', schema)
       }
 
+      // Build struct from properties
       const propertyEntries: Array<string> = []
 
       for (const [name, propSchema] of Object.entries(properties)) {
@@ -359,6 +377,13 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
       }
 
       const structCode = `Schema.Struct({\n  ${propertyEntries.join(',\n  ')}\n})`
+
+      // Combine struct with record if additionalProperties exists
+      if (recordCode) {
+        const combinedCode = `Schema.extend(${structCode}, ${recordCode})`
+        return addAnnotations(combinedCode, schema)
+      }
+
       return addAnnotations(structCode, schema)
     }
 
