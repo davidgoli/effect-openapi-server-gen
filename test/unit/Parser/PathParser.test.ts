@@ -586,4 +586,113 @@ describe('PathParser', () => {
         expect(warnings.length).toBe(0)
       }))
   })
+
+  describe('parameter $ref resolution', () => {
+    it.effect('should resolve parameter $ref to components/parameters', () =>
+      Effect.gen(function* () {
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: { title: 'Test', version: '1.0.0' },
+          paths: {
+            '/users/{userId}': {
+              get: {
+                operationId: 'getUser',
+                parameters: [{ $ref: '#/components/parameters/UserId' }],
+                responses: { '200': { description: 'Success' } },
+              },
+            },
+          },
+          components: {
+            parameters: {
+              UserId: {
+                name: 'userId',
+                in: 'path',
+                required: true,
+                schema: { type: 'string' },
+              },
+            },
+          },
+        }
+
+        const operations = yield* PathParser.extractOperations(spec)
+
+        expect(operations[0].pathParameters).toHaveLength(1)
+        expect(operations[0].pathParameters[0].name).toBe('userId')
+        expect(operations[0].pathParameters[0].in).toBe('path')
+        expect(operations[0].pathParameters[0].schema?.type).toBe('string')
+      }))
+
+    it.effect('should handle mix of inline and $ref parameters', () =>
+      Effect.gen(function* () {
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: { title: 'Test', version: '1.0.0' },
+          paths: {
+            '/users/{userId}': {
+              get: {
+                operationId: 'getUser',
+                parameters: [
+                  { $ref: '#/components/parameters/UserId' },
+                  {
+                    name: 'include',
+                    in: 'query',
+                    schema: { type: 'string' },
+                  },
+                ],
+                responses: { '200': { description: 'Success' } },
+              },
+            },
+          },
+          components: {
+            parameters: {
+              UserId: {
+                name: 'userId',
+                in: 'path',
+                required: true,
+                schema: { type: 'number' },
+              },
+            },
+          },
+        }
+
+        const operations = yield* PathParser.extractOperations(spec)
+
+        expect(operations[0].pathParameters).toHaveLength(1)
+        expect(operations[0].pathParameters[0].name).toBe('userId')
+        expect(operations[0].queryParameters).toHaveLength(1)
+        expect(operations[0].queryParameters[0].name).toBe('include')
+      }))
+
+    it.effect('should log warning for unresolved parameter $ref', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: { title: 'Test', version: '1.0.0' },
+          paths: {
+            '/users/{userId}': {
+              get: {
+                operationId: 'getUser',
+                parameters: [{ $ref: '#/components/parameters/NonExistent' }],
+                responses: { '200': { description: 'Success' } },
+              },
+            },
+          },
+          components: {
+            parameters: {},
+          },
+        }
+
+        yield* PathParser.extractOperations(spec).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBeGreaterThan(0)
+        expect(warnings.some((w) => w.message.includes('NonExistent'))).toBe(true)
+      }))
+  })
 })

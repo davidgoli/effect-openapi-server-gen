@@ -35,6 +35,62 @@ export interface ParsedOperation {
 }
 
 /**
+ * Check if a parameter is a $ref
+ */
+const isParameterRef = (param: OpenApiParser.ParameterObject | { readonly $ref: string }): param is { readonly $ref: string } =>
+  '$ref' in param && typeof param.$ref === 'string'
+
+/**
+ * Resolve a parameter $ref to its actual ParameterObject
+ */
+const resolveParameterRef = (
+  ref: string,
+  components: OpenApiParser.ComponentsObject | undefined
+): Effect.Effect<OpenApiParser.ParameterObject | undefined> =>
+  Effect.gen(function* () {
+    // Parse the $ref - expected format: #/components/parameters/ParamName
+    const match = ref.match(/^#\/components\/parameters\/(.+)$/)
+    if (!match) {
+      yield* Effect.logWarning(`Invalid parameter $ref format: ${ref}`)
+      return undefined
+    }
+
+    const paramName = match[1]
+    const resolved = components?.parameters?.[paramName]
+
+    if (!resolved) {
+      yield* Effect.logWarning(`Unable to resolve parameter $ref: ${ref}`)
+      return undefined
+    }
+
+    return resolved
+  })
+
+/**
+ * Resolve all parameters, handling both inline and $ref parameters
+ */
+const resolveParameters = (
+  rawParameters: ReadonlyArray<OpenApiParser.ParameterObject | { readonly $ref: string }>,
+  components: OpenApiParser.ComponentsObject | undefined
+): Effect.Effect<ReadonlyArray<OpenApiParser.ParameterObject>> =>
+  Effect.gen(function* () {
+    const resolved: Array<OpenApiParser.ParameterObject> = []
+
+    for (const param of rawParameters) {
+      if (isParameterRef(param)) {
+        const resolvedParam = yield* resolveParameterRef(param.$ref, components)
+        if (resolvedParam) {
+          resolved.push(resolvedParam)
+        }
+      } else {
+        resolved.push(param)
+      }
+    }
+
+    return resolved
+  })
+
+/**
  * Extract all operations from an OpenAPI specification
  *
  * @since 1.0.0
@@ -51,7 +107,10 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
         const operation = pathItem[method]
         if (!operation) continue
 
-        const parameters = operation.parameters || []
+        const rawParameters = operation.parameters || []
+
+        // Resolve all parameters (both inline and $ref)
+        const parameters = yield* resolveParameters(rawParameters, spec.components)
 
         // Separate parameters by type
         const pathParameters = parameters.filter((p) => p.in === 'path')

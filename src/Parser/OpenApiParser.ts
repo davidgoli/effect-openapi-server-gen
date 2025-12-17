@@ -66,7 +66,7 @@ export interface OperationObject {
   readonly summary?: string
   readonly description?: string
   readonly tags?: ReadonlyArray<string>
-  readonly parameters?: ReadonlyArray<ParameterObject>
+  readonly parameters?: ReadonlyArray<ParameterObject | { readonly $ref: string }>
   readonly requestBody?: RequestBodyObject
   readonly responses: ResponsesObject
   readonly security?: ReadonlyArray<Record<string, ReadonlyArray<string>>>
@@ -228,9 +228,18 @@ export type RawSecurityScheme = RawApiKeyScheme | RawHttpScheme | RawOAuth2Schem
  * @since 1.0.0
  * @category Models
  */
+export interface ParameterRef {
+  readonly $ref: string
+}
+
+/**
+ * @since 1.0.0
+ * @category Models
+ */
 export interface ComponentsObject {
   readonly schemas?: Record<string, SchemaObject>
   readonly securitySchemes?: Record<string, RawSecurityScheme>
+  readonly parameters?: Record<string, ParameterObject>
 }
 
 /**
