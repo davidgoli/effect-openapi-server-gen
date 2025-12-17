@@ -3,6 +3,7 @@
  */
 import * as Effect from 'effect/Effect'
 import type * as PathParser from '../Parser/PathParser.js'
+import * as Identifier from '../Utils/Identifier.js'
 import * as EndpointGenerator from './EndpointGenerator.js'
 import type * as SchemaGenerator from './SchemaGenerator.js'
 
@@ -17,38 +18,6 @@ export interface OperationGroup {
   readonly operations: ReadonlyArray<PathParser.ParsedOperation>
 }
 
-/**
- * Sanitize a string to be a valid JavaScript identifier (camelCase)
- * Handles kebab-case, spaces, and special characters
- */
-const sanitizeIdentifier = (name: string): Effect.Effect<string> =>
-  Effect.gen(function* () {
-    // Replace non-alphanumeric characters with spaces, then split
-    const parts = name
-      .replace(/[^a-zA-Z0-9]+/g, ' ')
-      .trim()
-      .split(/\s+/)
-
-    // Convert to camelCase
-    const sanitized = parts
-      .map((part, index) => {
-        if (index === 0) {
-          // First part: lowercase
-          return part.charAt(0).toLowerCase() + part.slice(1)
-        } else {
-          // Subsequent parts: capitalize first letter
-          return part.charAt(0).toUpperCase() + part.slice(1)
-        }
-      })
-      .join('')
-
-    // Warn if the name was altered
-    if (sanitized !== name) {
-      yield* Effect.logWarning(`Group name sanitized: "${name}" → "${sanitized}"`)
-    }
-
-    return sanitized
-  })
 
 /**
  * Capitalize group name (handle kebab-case)
@@ -85,7 +54,7 @@ export const generateGroups = (
     const groups: Array<OperationGroup> = []
 
     for (const [name, ops] of groupMap.entries()) {
-      const varName = yield* sanitizeIdentifier(name)
+      const varName = yield* Identifier.sanitizeCamel(name)
       groups.push({
         name,
         varName,
