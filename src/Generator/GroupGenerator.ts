@@ -43,11 +43,12 @@ export const generateGroups = (
     for (const operation of operations) {
       const groupName = operation.tags.length > 0 ? operation.tags[0] : 'default'
 
-      if (!groupMap.has(groupName)) {
-        groupMap.set(groupName, [])
+      let group = groupMap.get(groupName)
+      if (!group) {
+        group = []
+        groupMap.set(groupName, group)
       }
-
-      groupMap.get(groupName)!.push(operation)
+      group.push(operation)
     }
 
     const groups: Array<OperationGroup> = []

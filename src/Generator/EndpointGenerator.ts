@@ -65,7 +65,9 @@ export const generateEndpoint = (
     for (const param of operation.pathParameters) {
       const varName = `${operation.operationId}_${param.name}Param`
       // Path parameters are transmitted as strings in URLs, use generateQueryParamSchemaCode
-      const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
+      // Default to string type if schema is not specified
+      const paramSchema = param.schema ?? { type: 'string' }
+      const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(paramSchema)
       pathParamDeclarations.push(`const ${varName} = HttpApiSchema.param('${param.name}', ${schemaCode})`)
       pathParams.push({ name: param.name, varName })
     }
@@ -99,7 +101,9 @@ export const generateEndpoint = (
       const queryParamProps: Array<string> = []
       for (const param of operation.queryParameters) {
         // Use generateQueryParamSchemaCode for query parameters (NumberFromString, BooleanFromString, etc.)
-        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
+        // Default to string type if schema is not specified
+        const paramSchema = param.schema ?? { type: 'string' }
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(paramSchema)
         const isRequired = param.required ?? false
         const propCode = isRequired ? `${param.name}: ${schemaCode}` : `${param.name}: Schema.optional(${schemaCode})`
         queryParamProps.push(propCode)
@@ -113,7 +117,9 @@ export const generateEndpoint = (
       const headerProps: Array<string> = []
       for (const param of operation.headerParameters) {
         // Headers are transmitted as strings, so use generateQueryParamSchemaCode
-        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
+        // Default to string type if schema is not specified
+        const paramSchema = param.schema ?? { type: 'string' }
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(paramSchema)
         const isRequired = param.required ?? false
         // Header names should be quoted strings (e.g., 'X-API-Key')
         const propCode = isRequired
@@ -130,7 +136,9 @@ export const generateEndpoint = (
       const cookieProps: Array<string> = []
       for (const param of operation.cookieParameters) {
         // Cookies are transmitted as strings, so use generateQueryParamSchemaCode
-        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(param.schema!)
+        // Default to string type if schema is not specified
+        const paramSchema = param.schema ?? { type: 'string' }
+        const schemaCode = yield* SchemaGenerator.generateQueryParamSchemaCode(paramSchema)
         const isRequired = param.required ?? false
         // Cookie names should be quoted strings
         const propCode = isRequired

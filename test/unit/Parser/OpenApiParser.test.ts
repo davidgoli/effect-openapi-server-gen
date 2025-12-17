@@ -189,6 +189,7 @@ paths: {}
 
         expect(result.paths['/users']).toBeDefined()
         expect(result.paths['/users'].get).toBeDefined()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         expect(result.paths['/users'].get!.operationId).toBe('getUsers')
       }))
 
