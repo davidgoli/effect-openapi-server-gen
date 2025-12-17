@@ -36,4 +36,51 @@ describe('CodeEmitter', () => {
         expect(result).toContain('.add(createUser)')
       }))
   })
+
+  describe('export style configuration - Phase 9', () => {
+    it.effect('should generate named exports by default', () =>
+      Effect.gen(function* () {
+        const code = 'export const MySchema = Schema.String'
+
+        const result = yield* CodeEmitter.emit(code)
+
+        // Default behavior is named exports - code passes through unchanged
+        expect(result).toContain('export const MySchema')
+      }))
+
+    it.effect('should add namespace export when configured', () =>
+      Effect.gen(function* () {
+        const code = 'export const UserSchema = Schema.String\nexport const PostSchema = Schema.Number'
+        const exportNames = ['UserSchema', 'PostSchema']
+
+        const result = yield* CodeEmitter.emit(code, {
+          exportStyle: 'namespace',
+          exportNames,
+          namespaceName: 'Schemas',
+        })
+
+        // Should add namespace object at the end
+        expect(result).toContain('export const UserSchema')
+        expect(result).toContain('export const PostSchema')
+        expect(result).toContain('export const Schemas = {')
+        expect(result).toContain('UserSchema')
+        expect(result).toContain('PostSchema')
+      }))
+
+    it.effect('should generate default export when configured', () =>
+      Effect.gen(function* () {
+        const code = 'export const UserSchema = Schema.String'
+        const exportNames = ['UserSchema']
+
+        const result = yield* CodeEmitter.emit(code, {
+          exportStyle: 'default',
+          exportNames,
+        })
+
+        // Should add default export at the end
+        expect(result).toContain('export const UserSchema')
+        expect(result).toContain('export default {')
+        expect(result).toContain('UserSchema')
+      }))
+  })
 })

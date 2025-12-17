@@ -4,12 +4,45 @@
 import * as Effect from 'effect/Effect'
 
 /**
+ * Export style options for generated code
+ *
+ * @since 1.0.0
+ * @category Types
+ */
+export type ExportStyle = 'named' | 'namespace' | 'default'
+
+/**
+ * Options for the code emitter
+ *
+ * @since 1.0.0
+ * @category Types
+ */
+export interface EmitterOptions {
+  /**
+   * Export style for generated code
+   * - 'named': Named exports only (default)
+   * - 'namespace': Named exports plus namespace object
+   * - 'default': Named exports plus default export object
+   */
+  readonly exportStyle?: ExportStyle
+  /**
+   * List of export names to include in namespace/default export
+   * Required when exportStyle is 'namespace' or 'default'
+   */
+  readonly exportNames?: ReadonlyArray<string>
+  /**
+   * Name for the namespace export (only used with 'namespace' style)
+   */
+  readonly namespaceName?: string
+}
+
+/**
  * Emit final TypeScript code with file header
  *
  * @since 1.0.0
  * @category Generation
  */
-export const emit = (code: string): Effect.Effect<string> =>
+export const emit = (code: string, options?: EmitterOptions): Effect.Effect<string> =>
   Effect.sync(() => {
     const header = [
       '/**',
@@ -22,5 +55,20 @@ export const emit = (code: string): Effect.Effect<string> =>
       ' */',
     ].join('\n')
 
-    return `${header}\n\n${code}\n`
+    let output = `${header}\n\n${code}`
+
+    // Add additional exports based on style
+    const exportStyle = options?.exportStyle ?? 'named'
+    const exportNames = options?.exportNames ?? []
+
+    if (exportStyle === 'namespace' && exportNames.length > 0) {
+      const namespaceName = options?.namespaceName ?? 'Api'
+      const namespaceExport = `\nexport const ${namespaceName} = {\n  ${exportNames.join(',\n  ')}\n}`
+      output += namespaceExport
+    } else if (exportStyle === 'default' && exportNames.length > 0) {
+      const defaultExport = `\nexport default {\n  ${exportNames.join(',\n  ')}\n}`
+      output += defaultExport
+    }
+
+    return `${output}\n`
   })
