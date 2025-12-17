@@ -490,16 +490,15 @@ describe('PathParser', () => {
           },
         }
 
-        yield* PathParser.extractOperations(spec).pipe(
-          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
-        )
+        yield* PathParser.extractOperations(spec).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, testLogger)))
 
         const warnings = logs.filter((l) => l.level === 'WARN')
 
         expect(warnings.length).toBeGreaterThan(0)
         expect(warnings.some((w) => w.message.includes('multipart/form-data'))).toBe(true)
         expect(warnings.some((w) => w.message.includes('uploadFile'))).toBe(true)
-      }))
+      })
+    )
 
     it.effect('should log warning for non-JSON response content types', () =>
       Effect.gen(function* () {
@@ -531,16 +530,15 @@ describe('PathParser', () => {
           },
         }
 
-        yield* PathParser.extractOperations(spec).pipe(
-          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
-        )
+        yield* PathParser.extractOperations(spec).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, testLogger)))
 
         const warnings = logs.filter((l) => l.level === 'WARN')
 
         expect(warnings.length).toBeGreaterThan(0)
         expect(warnings.some((w) => w.message.includes('application/octet-stream'))).toBe(true)
         expect(warnings.some((w) => w.message.includes('downloadFile'))).toBe(true)
-      }))
+      })
+    )
 
     it.effect('should not log warnings when only application/json content type is used', () =>
       Effect.gen(function* () {
@@ -577,14 +575,13 @@ describe('PathParser', () => {
           },
         }
 
-        yield* PathParser.extractOperations(spec).pipe(
-          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
-        )
+        yield* PathParser.extractOperations(spec).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, testLogger)))
 
         const warnings = logs.filter((l) => l.level === 'WARN')
 
         expect(warnings.length).toBe(0)
-      }))
+      })
+    )
   })
 
   describe('parameter $ref resolution', () => {
@@ -620,7 +617,8 @@ describe('PathParser', () => {
         expect(operations[0].pathParameters[0].name).toBe('userId')
         expect(operations[0].pathParameters[0].in).toBe('path')
         expect(operations[0].pathParameters[0].schema?.type).toBe('string')
-      }))
+      })
+    )
 
     it.effect('should handle mix of inline and $ref parameters', () =>
       Effect.gen(function* () {
@@ -661,7 +659,8 @@ describe('PathParser', () => {
         expect(operations[0].pathParameters[0].name).toBe('userId')
         expect(operations[0].queryParameters).toHaveLength(1)
         expect(operations[0].queryParameters[0].name).toBe('include')
-      }))
+      })
+    )
 
     it.effect('should log warning for unresolved parameter $ref', () =>
       Effect.gen(function* () {
@@ -685,14 +684,13 @@ describe('PathParser', () => {
           },
         }
 
-        yield* PathParser.extractOperations(spec).pipe(
-          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
-        )
+        yield* PathParser.extractOperations(spec).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, testLogger)))
 
         const warnings = logs.filter((l) => l.level === 'WARN')
 
         expect(warnings.length).toBeGreaterThan(0)
         expect(warnings.some((w) => w.message.includes('NonExistent'))).toBe(true)
-      }))
+      })
+    )
   })
 })

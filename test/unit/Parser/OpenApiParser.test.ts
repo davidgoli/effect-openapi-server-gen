@@ -86,7 +86,8 @@ paths: {}
 
         expect(result.openapi).toBe('3.0.3')
         expect(result.info.title).toBe('Test API')
-      }))
+      })
+    )
 
     it.effect('should handle nullable property (OpenAPI 3.0 style)', () =>
       Effect.gen(function* () {
@@ -123,7 +124,8 @@ paths: {}
         // nullable is a valid property in 3.0 style
         const responseSchema = result.paths['/users'].get?.responses['200']?.content?.['application/json']?.schema
         expect(responseSchema?.nullable).toBe(true)
-      }))
+      })
+    )
 
     it('should fail if info section is missing', () =>
       Effect.gen(function* () {

@@ -18,7 +18,6 @@ export interface OperationGroup {
   readonly operations: ReadonlyArray<PathParser.ParsedOperation>
 }
 
-
 /**
  * Capitalize group name (handle kebab-case)
  */

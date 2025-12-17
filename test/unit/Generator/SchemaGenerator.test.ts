@@ -46,7 +46,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Int')
-      }))
+      })
+    )
 
     it.effect('should generate Schema.Int with constraints for integer type', () =>
       Effect.gen(function* () {
@@ -59,7 +60,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Int.pipe(Schema.greaterThanOrEqualTo(1), Schema.lessThanOrEqualTo(100))')
-      }))
+      })
+    )
 
     it('should generate Schema.Boolean for boolean type', () =>
       Effect.gen(function* () {
@@ -398,7 +400,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.UUID')
-      }))
+      })
+    )
 
     it.effect('should generate email validation for email format', () =>
       Effect.gen(function* () {
@@ -412,7 +415,8 @@ describe('SchemaGenerator', () => {
         // Should use pattern validation for email
         expect(result).toContain('Schema.String')
         expect(result).toContain('Schema.pattern')
-      }))
+      })
+    )
 
     it.effect('should generate Schema.DateTimeUtc for date-time format', () =>
       Effect.gen(function* () {
@@ -424,7 +428,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.DateTimeUtc')
-      }))
+      })
+    )
 
     it.effect('should generate Schema.DateFromString for date format', () =>
       Effect.gen(function* () {
@@ -436,7 +441,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.DateFromString')
-      }))
+      })
+    )
 
     it.effect('should generate Schema.URL for uri format', () =>
       Effect.gen(function* () {
@@ -448,7 +454,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.URL')
-      }))
+      })
+    )
 
     it.effect('should generate Schema.URL for url format', () =>
       Effect.gen(function* () {
@@ -460,7 +467,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.URL')
-      }))
+      })
+    )
 
     it.effect('should fall back to Schema.String for unknown formats', () =>
       Effect.gen(function* () {
@@ -472,7 +480,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.String')
-      }))
+      })
+    )
 
     it.effect('should combine format with other constraints when applicable', () =>
       Effect.gen(function* () {
@@ -487,7 +496,8 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('Schema.String')
         expect(result).toContain('Schema.pattern')
         expect(result).toContain('Schema.minLength')
-      }))
+      })
+    )
 
     it.effect('should add description annotation to format schemas', () =>
       Effect.gen(function* () {
@@ -502,7 +512,8 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('Schema.UUID')
         expect(result).toContain('.annotations')
         expect(result).toContain('User unique identifier')
-      }))
+      })
+    )
   })
 
   describe('array validation - Phase 6', () => {
@@ -517,7 +528,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Array(Schema.String).pipe(Schema.minItems(1))')
-      }))
+      })
+    )
 
     it.effect('should generate maxItems constraint', () =>
       Effect.gen(function* () {
@@ -530,7 +542,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Array(Schema.Number).pipe(Schema.maxItems(10))')
-      }))
+      })
+    )
 
     it.effect('should combine minItems and maxItems', () =>
       Effect.gen(function* () {
@@ -544,7 +557,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Array(Schema.String).pipe(Schema.minItems(1), Schema.maxItems(5))')
-      }))
+      })
+    )
 
     it.effect('should handle uniqueItems constraint', () =>
       Effect.gen(function* () {
@@ -559,7 +573,8 @@ describe('SchemaGenerator', () => {
         // Should filter to ensure all items are unique
         expect(result).toContain('Schema.Array(Schema.String)')
         expect(result).toContain('Schema.filter')
-      }))
+      })
+    )
 
     it.effect('should combine all array constraints', () =>
       Effect.gen(function* () {
@@ -577,7 +592,8 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('Schema.minItems(2)')
         expect(result).toContain('Schema.maxItems(10)')
         expect(result).toContain('Schema.filter')
-      }))
+      })
+    )
 
     it.effect('should add description annotation to constrained arrays', () =>
       Effect.gen(function* () {
@@ -593,7 +609,8 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('Schema.minItems(1)')
         expect(result).toContain('.annotations')
         expect(result).toContain('A non-empty list of tags')
-      }))
+      })
+    )
   })
 
   describe('additionalProperties support - Phase 7', () => {
@@ -607,7 +624,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Record({ key: Schema.String, value: Schema.Unknown })')
-      }))
+      })
+    )
 
     it.effect('should generate typed Schema.Record for additionalProperties with schema', () =>
       Effect.gen(function* () {
@@ -621,7 +639,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Record({ key: Schema.String, value: Schema.String })')
-      }))
+      })
+    )
 
     it.effect('should not generate Record for additionalProperties: false', () =>
       Effect.gen(function* () {
@@ -633,7 +652,8 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toBe('Schema.Struct({})')
-      }))
+      })
+    )
 
     it.effect('should combine properties with additionalProperties', () =>
       Effect.gen(function* () {
@@ -654,7 +674,8 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('Schema.extend')
         expect(result).toContain('name: Schema.String')
         expect(result).toContain('Schema.Record({ key: Schema.String, value: Schema.Number })')
-      }))
+      })
+    )
 
     it.effect('should add description annotation to Record schema', () =>
       Effect.gen(function* () {
@@ -671,7 +692,8 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('Schema.Record({ key: Schema.String, value: Schema.String })')
         expect(result).toContain('.annotations')
         expect(result).toContain('A string map')
-      }))
+      })
+    )
   })
 
   describe('number validation - Phase 3', () => {
@@ -986,7 +1008,8 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('/**')
         expect(result).toContain('* A user profile entity')
         expect(result).toContain('*/')
-      }))
+      })
+    )
 
     it.effect('should generate @deprecated annotation for deprecated schemas', () =>
       Effect.gen(function* () {
@@ -1000,7 +1023,8 @@ describe('SchemaGenerator', () => {
         // Should have @deprecated annotation
         expect(result).toContain('@deprecated')
         expect(result).toContain('This schema is deprecated')
-      }))
+      })
+    )
 
     it.effect('should combine description and deprecated annotation', () =>
       Effect.gen(function* () {
@@ -1015,7 +1039,8 @@ describe('SchemaGenerator', () => {
         // Should have both description and deprecated
         expect(result).toContain('Old identifier format')
         expect(result).toContain('@deprecated')
-      }))
+      })
+    )
   })
 
   describe('logging warnings', () => {
@@ -1038,7 +1063,8 @@ describe('SchemaGenerator', () => {
         expect(warnings.length).toBeGreaterThan(0)
         expect(warnings.some((w) => w.message.includes('kebab-case-name'))).toBe(true)
         expect(warnings.some((w) => w.message.includes('KebabCaseName'))).toBe(true)
-      }))
+      })
+    )
 
     it.effect('should not log warning when schema name does not need sanitization', () =>
       Effect.gen(function* () {
@@ -1057,6 +1083,7 @@ describe('SchemaGenerator', () => {
         const warnings = logs.filter((l) => l.level === 'WARN')
 
         expect(warnings.length).toBe(0)
-      }))
+      })
+    )
   })
 })

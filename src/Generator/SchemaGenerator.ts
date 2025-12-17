@@ -303,7 +303,9 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
       }
       if (schema.uniqueItems === true) {
         // Custom filter to ensure all items are unique using Set comparison
-        filters.push(`Schema.filter((items) => new Set(items).size === items.length, { message: () => 'Array items must be unique' })`)
+        filters.push(
+          `Schema.filter((items) => new Set(items).size === items.length, { message: () => 'Array items must be unique' })`
+        )
       }
 
       if (filters.length > 0) {
@@ -390,7 +392,6 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
 
     return yield* new SchemaGenerationError({ message: `Unsupported schema type: ${schema.type || 'undefined'}` })
   })
-
 
 /**
  * Generate a named schema definition

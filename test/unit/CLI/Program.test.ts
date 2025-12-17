@@ -64,7 +64,8 @@ paths:
         // Verify logs were captured (when we implement Effect logging)
         const infoLogs = logs.filter((l) => l.level === 'INFO')
         expect(infoLogs.length).toBeGreaterThan(0)
-      }).pipe(Effect.scoped, Effect.provide(TestLayer)))
+      }).pipe(Effect.scoped, Effect.provide(TestLayer))
+    )
 
     it.effect('should fail with error when spec file not found', () =>
       Effect.gen(function* () {
@@ -78,7 +79,8 @@ paths:
         )
 
         expect(result._tag).toBe('Left')
-      }).pipe(Effect.provide(TestLayer)))
+      }).pipe(Effect.provide(TestLayer))
+    )
 
     it.effect('should log info messages during generation', () =>
       Effect.gen(function* () {
@@ -117,6 +119,7 @@ paths:
         expect(infoLogs.some((l) => l.message.includes('Parsing'))).toBe(true)
         expect(infoLogs.some((l) => l.message.includes('Generating'))).toBe(true)
         expect(infoLogs.some((l) => l.message.includes('Writing'))).toBe(true)
-      }).pipe(Effect.scoped, Effect.provide(TestLayer)))
+      }).pipe(Effect.scoped, Effect.provide(TestLayer))
+    )
   })
 })

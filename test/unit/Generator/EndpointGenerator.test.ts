@@ -464,7 +464,8 @@ describe('EndpointGenerator', () => {
         expect(warnings.length).toBeGreaterThan(0)
         expect(warnings.some((w) => w.message.includes('5XX'))).toBe(true)
         expect(warnings.some((w) => w.message.includes('getUsers'))).toBe(true)
-      }))
+      })
+    )
 
     it.effect('should not log warning for valid numeric status codes', () =>
       Effect.gen(function* () {
@@ -499,6 +500,7 @@ describe('EndpointGenerator', () => {
         const warnings = logs.filter((l) => l.level === 'WARN')
 
         expect(warnings.length).toBe(0)
-      }))
+      })
+    )
   })
 })

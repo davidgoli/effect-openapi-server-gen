@@ -266,7 +266,8 @@ describe('GroupGenerator', () => {
         expect(warnings.length).toBeGreaterThan(0)
         expect(warnings.some((w) => w.message.includes('user-management'))).toBe(true)
         expect(warnings.some((w) => w.message.includes('userManagement'))).toBe(true)
-      }))
+      })
+    )
 
     it.effect('should not log warning when group name does not need sanitization', () =>
       Effect.gen(function* () {
@@ -294,6 +295,7 @@ describe('GroupGenerator', () => {
         const warnings = logs.filter((l) => l.level === 'WARN')
 
         expect(warnings.length).toBe(0)
-      }))
+      })
+    )
   })
 })

@@ -46,7 +46,8 @@ describe('CodeEmitter', () => {
 
         // Default behavior is named exports - code passes through unchanged
         expect(result).toContain('export const MySchema')
-      }))
+      })
+    )
 
     it.effect('should add namespace export when configured', () =>
       Effect.gen(function* () {
@@ -65,7 +66,8 @@ describe('CodeEmitter', () => {
         expect(result).toContain('export const Schemas = {')
         expect(result).toContain('UserSchema')
         expect(result).toContain('PostSchema')
-      }))
+      })
+    )
 
     it.effect('should generate default export when configured', () =>
       Effect.gen(function* () {
@@ -81,6 +83,7 @@ describe('CodeEmitter', () => {
         expect(result).toContain('export const UserSchema')
         expect(result).toContain('export default {')
         expect(result).toContain('UserSchema')
-      }))
+      })
+    )
   })
 })

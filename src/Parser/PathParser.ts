@@ -37,8 +37,9 @@ export interface ParsedOperation {
 /**
  * Check if a parameter is a $ref
  */
-const isParameterRef = (param: OpenApiParser.ParameterObject | { readonly $ref: string }): param is { readonly $ref: string } =>
-  '$ref' in param && typeof param.$ref === 'string'
+const isParameterRef = (
+  param: OpenApiParser.ParameterObject | { readonly $ref: string }
+): param is { readonly $ref: string } => '$ref' in param && typeof param.$ref === 'string'
 
 /**
  * Resolve a parameter $ref to its actual ParameterObject
