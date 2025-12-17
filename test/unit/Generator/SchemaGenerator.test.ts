@@ -37,7 +37,7 @@ describe('SchemaGenerator', () => {
         expect(result).toBe('Schema.Number')
       }))
 
-    it('should generate Schema.Number for integer type', () =>
+    it.effect('should generate Schema.Int for integer type', () =>
       Effect.gen(function* () {
         const schema: OpenApiParser.SchemaObject = {
           type: 'integer',
@@ -45,7 +45,20 @@ describe('SchemaGenerator', () => {
 
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
-        expect(result).toBe('Schema.Number')
+        expect(result).toBe('Schema.Int')
+      }))
+
+    it.effect('should generate Schema.Int with constraints for integer type', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'integer',
+          minimum: 1,
+          maximum: 100,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.Int.pipe(Schema.greaterThanOrEqualTo(1), Schema.lessThanOrEqualTo(100))')
       }))
 
     it('should generate Schema.Boolean for boolean type', () =>

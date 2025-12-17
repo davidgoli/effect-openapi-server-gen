@@ -148,8 +148,55 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
       return addAnnotations(code, schema)
     }
 
-    if (schema.type === 'number' || schema.type === 'integer') {
+    if (schema.type === 'number') {
       let code = 'Schema.Number'
+
+      // Apply validation filters
+      const filters: Array<string> = []
+
+      // Handle minimum/exclusiveMinimum
+      // OpenAPI 3.0: minimum + exclusiveMinimum: true
+      // OpenAPI 3.1: exclusiveMinimum: <number>
+      if (typeof schema.exclusiveMinimum === 'number') {
+        // OpenAPI 3.1 style - exclusiveMinimum is the numeric value
+        filters.push(`Schema.greaterThan(${schema.exclusiveMinimum})`)
+      } else if (schema.minimum !== undefined) {
+        // OpenAPI 3.0 style - minimum with optional boolean exclusiveMinimum
+        if (schema.exclusiveMinimum === true) {
+          filters.push(`Schema.greaterThan(${schema.minimum})`)
+        } else {
+          filters.push(`Schema.greaterThanOrEqualTo(${schema.minimum})`)
+        }
+      }
+
+      // Handle maximum/exclusiveMaximum
+      // OpenAPI 3.0: maximum + exclusiveMaximum: true
+      // OpenAPI 3.1: exclusiveMaximum: <number>
+      if (typeof schema.exclusiveMaximum === 'number') {
+        // OpenAPI 3.1 style - exclusiveMaximum is the numeric value
+        filters.push(`Schema.lessThan(${schema.exclusiveMaximum})`)
+      } else if (schema.maximum !== undefined) {
+        // OpenAPI 3.0 style - maximum with optional boolean exclusiveMaximum
+        if (schema.exclusiveMaximum === true) {
+          filters.push(`Schema.lessThan(${schema.maximum})`)
+        } else {
+          filters.push(`Schema.lessThanOrEqualTo(${schema.maximum})`)
+        }
+      }
+
+      if (schema.multipleOf !== undefined) {
+        filters.push(`Schema.multipleOf(${schema.multipleOf})`)
+      }
+
+      if (filters.length > 0) {
+        code = `${code}.pipe(${filters.join(', ')})`
+      }
+
+      return addAnnotations(code, schema)
+    }
+
+    if (schema.type === 'integer') {
+      let code = 'Schema.Int'
 
       // Apply validation filters
       const filters: Array<string> = []
