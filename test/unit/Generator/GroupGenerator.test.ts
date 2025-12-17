@@ -1,7 +1,17 @@
 import { describe, expect, it } from '@effect/vitest'
 import * as Effect from 'effect/Effect'
+import * as Logger from 'effect/Logger'
 import * as GroupGenerator from '../../../src/Generator/GroupGenerator.js'
 import type * as PathParser from '../../../src/Parser/PathParser.js'
+
+/**
+ * Create a test logger that captures log messages to a mutable array
+ */
+const makeTestLogger = (logs: Array<{ level: string; message: string }>) =>
+  Logger.make(({ logLevel, message }) => {
+    const messageStr = typeof message === 'string' ? message : String(message)
+    logs.push({ level: logLevel.label, message: messageStr })
+  })
 
 describe('GroupGenerator', () => {
   describe('generateGroups', () => {
@@ -224,6 +234,66 @@ describe('GroupGenerator', () => {
 
         expect(code).toContain('getUsers')
         expect(code).toContain('createUser')
+      }))
+  })
+
+  describe('logging warnings', () => {
+    it.effect('should log warning when group name is sanitized', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const operations: ReadonlyArray<PathParser.ParsedOperation> = [
+          {
+            operationId: 'getUser',
+            method: 'get',
+            path: '/users',
+            tags: ['user-management'],
+            pathParameters: [],
+            queryParameters: [],
+            headerParameters: [],
+            cookieParameters: [],
+            responses: [],
+          },
+        ]
+
+        yield* GroupGenerator.generateGroups(operations).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBeGreaterThan(0)
+        expect(warnings.some((w) => w.message.includes('user-management'))).toBe(true)
+        expect(warnings.some((w) => w.message.includes('userManagement'))).toBe(true)
+      }))
+
+    it.effect('should not log warning when group name does not need sanitization', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const operations: ReadonlyArray<PathParser.ParsedOperation> = [
+          {
+            operationId: 'getUsers',
+            method: 'get',
+            path: '/users',
+            tags: ['users'],
+            pathParameters: [],
+            queryParameters: [],
+            headerParameters: [],
+            cookieParameters: [],
+            responses: [],
+          },
+        ]
+
+        yield* GroupGenerator.generateGroups(operations).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBe(0)
       }))
   })
 })

@@ -41,7 +41,7 @@ export interface ParsedOperation {
  * @category Parsing
  */
 export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effect<ReadonlyArray<ParsedOperation>> =>
-  Effect.sync(() => {
+  Effect.gen(function* () {
     const operations: Array<ParsedOperation> = []
 
     for (const [path, pathItem] of Object.entries(spec.paths)) {
@@ -63,11 +63,11 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
         let requestBody: ParsedOperation['requestBody'] | undefined
         if (operation.requestBody?.content) {
           const contentTypes = Object.keys(operation.requestBody.content)
-          const hasNonJson = contentTypes.some((ct) => ct !== 'application/json')
+          const nonJsonTypes = contentTypes.filter((ct) => ct !== 'application/json')
 
-          if (hasNonJson) {
-            console.warn(
-              `⚠️  Operation '${operation.operationId}' (${method.toUpperCase()} ${path}) has non-JSON content types that will be ignored: ${contentTypes.filter((ct) => ct !== 'application/json').join(', ')}`
+          if (nonJsonTypes.length > 0) {
+            yield* Effect.logWarning(
+              `Operation '${operation.operationId}' (${method.toUpperCase()} ${path}) has non-JSON content types that will be ignored: ${nonJsonTypes.join(', ')}`
             )
           }
 
@@ -85,11 +85,11 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
         for (const [statusCode, response] of Object.entries(operation.responses)) {
           if (response.content) {
             const contentTypes = Object.keys(response.content)
-            const hasNonJson = contentTypes.some((ct) => ct !== 'application/json')
+            const nonJsonTypes = contentTypes.filter((ct) => ct !== 'application/json')
 
-            if (hasNonJson) {
-              console.warn(
-                `⚠️  Operation '${operation.operationId}' (${method.toUpperCase()} ${path}) response ${statusCode} has non-JSON content types that will be ignored: ${contentTypes.filter((ct) => ct !== 'application/json').join(', ')}`
+            if (nonJsonTypes.length > 0) {
+              yield* Effect.logWarning(
+                `Operation '${operation.operationId}' (${method.toUpperCase()} ${path}) response ${statusCode} has non-JSON content types that will be ignored: ${nonJsonTypes.join(', ')}`
               )
             }
           }

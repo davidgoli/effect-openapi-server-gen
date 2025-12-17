@@ -1,7 +1,18 @@
 import { describe, expect, it } from '@effect/vitest'
 import * as Effect from 'effect/Effect'
+import * as Logger from 'effect/Logger'
 import type * as OpenApiParser from '../../../src/Parser/OpenApiParser.js'
 import * as PathParser from '../../../src/Parser/PathParser.js'
+
+/**
+ * Create a test logger that captures log messages to a mutable array
+ * The Logger callback must be synchronous, so we use a mutable array
+ */
+const makeTestLogger = (logs: Array<{ level: string; message: string }>) =>
+  Logger.make(({ logLevel, message }) => {
+    const messageStr = typeof message === 'string' ? message : String(message)
+    logs.push({ level: logLevel.label, message: messageStr })
+  })
 
 describe('PathParser', () => {
   describe('extractOperations', () => {
@@ -446,6 +457,133 @@ describe('PathParser', () => {
         const searchParam = operations[0].queryParameters.find((p) => p.name === 'search')
         expect(searchParam?.schema?.minLength).toBe(3)
         expect(searchParam?.schema?.maxLength).toBe(50)
+      }))
+  })
+
+  describe('logging warnings', () => {
+    it.effect('should log warning for non-JSON request body content types', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: { title: 'Test', version: '1.0.0' },
+          paths: {
+            '/upload': {
+              post: {
+                operationId: 'uploadFile',
+                requestBody: {
+                  required: true,
+                  content: {
+                    'application/json': {
+                      schema: { type: 'object' },
+                    },
+                    'multipart/form-data': {
+                      schema: { type: 'object' },
+                    },
+                  },
+                },
+                responses: { '200': { description: 'Success' } },
+              },
+            },
+          },
+        }
+
+        yield* PathParser.extractOperations(spec).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBeGreaterThan(0)
+        expect(warnings.some((w) => w.message.includes('multipart/form-data'))).toBe(true)
+        expect(warnings.some((w) => w.message.includes('uploadFile'))).toBe(true)
+      }))
+
+    it.effect('should log warning for non-JSON response content types', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: { title: 'Test', version: '1.0.0' },
+          paths: {
+            '/download': {
+              get: {
+                operationId: 'downloadFile',
+                responses: {
+                  '200': {
+                    description: 'Success',
+                    content: {
+                      'application/json': {
+                        schema: { type: 'object' },
+                      },
+                      'application/octet-stream': {
+                        schema: { type: 'string', format: 'binary' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }
+
+        yield* PathParser.extractOperations(spec).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBeGreaterThan(0)
+        expect(warnings.some((w) => w.message.includes('application/octet-stream'))).toBe(true)
+        expect(warnings.some((w) => w.message.includes('downloadFile'))).toBe(true)
+      }))
+
+    it.effect('should not log warnings when only application/json content type is used', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: { title: 'Test', version: '1.0.0' },
+          paths: {
+            '/users': {
+              post: {
+                operationId: 'createUser',
+                requestBody: {
+                  required: true,
+                  content: {
+                    'application/json': {
+                      schema: { type: 'object' },
+                    },
+                  },
+                },
+                responses: {
+                  '200': {
+                    description: 'Success',
+                    content: {
+                      'application/json': {
+                        schema: { type: 'object' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }
+
+        yield* PathParser.extractOperations(spec).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBe(0)
       }))
   })
 })

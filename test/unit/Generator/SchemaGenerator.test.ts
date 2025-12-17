@@ -1,7 +1,17 @@
 import { describe, expect, it } from '@effect/vitest'
 import * as Effect from 'effect/Effect'
+import * as Logger from 'effect/Logger'
 import * as SchemaGenerator from '../../../src/Generator/SchemaGenerator.js'
 import type * as OpenApiParser from '../../../src/Parser/OpenApiParser.js'
+
+/**
+ * Create a test logger that captures log messages to a mutable array
+ */
+const makeTestLogger = (logs: Array<{ level: string; message: string }>) =>
+  Logger.make(({ logLevel, message }) => {
+    const messageStr = typeof message === 'string' ? message : String(message)
+    logs.push({ level: logLevel.label, message: messageStr })
+  })
 
 describe('SchemaGenerator', () => {
   describe('generateSchemaCode', () => {
@@ -680,6 +690,48 @@ describe('SchemaGenerator', () => {
         // Should escape newlines and tabs
         expect(result).toContain('\\n')
         expect(result).toContain('\\t')
+      }))
+  })
+
+  describe('logging warnings', () => {
+    it.effect('should log warning when schema name is sanitized', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const name = 'kebab-case-name'
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+        }
+
+        yield* SchemaGenerator.generateNamedSchema(name, schema).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBeGreaterThan(0)
+        expect(warnings.some((w) => w.message.includes('kebab-case-name'))).toBe(true)
+        expect(warnings.some((w) => w.message.includes('KebabCaseName'))).toBe(true)
+      }))
+
+    it.effect('should not log warning when schema name does not need sanitization', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const name = 'ValidName'
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+        }
+
+        yield* SchemaGenerator.generateNamedSchema(name, schema).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBe(0)
       }))
   })
 })

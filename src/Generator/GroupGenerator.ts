@@ -21,33 +21,34 @@ export interface OperationGroup {
  * Sanitize a string to be a valid JavaScript identifier (camelCase)
  * Handles kebab-case, spaces, and special characters
  */
-const sanitizeIdentifier = (name: string): string => {
-  // Replace non-alphanumeric characters with spaces, then split
-  const parts = name
-    .replace(/[^a-zA-Z0-9]+/g, ' ')
-    .trim()
-    .split(/\s+/)
+const sanitizeIdentifier = (name: string): Effect.Effect<string> =>
+  Effect.gen(function* () {
+    // Replace non-alphanumeric characters with spaces, then split
+    const parts = name
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .trim()
+      .split(/\s+/)
 
-  // Convert to camelCase
-  const sanitized = parts
-    .map((part, index) => {
-      if (index === 0) {
-        // First part: lowercase
-        return part.charAt(0).toLowerCase() + part.slice(1)
-      } else {
-        // Subsequent parts: capitalize first letter
-        return part.charAt(0).toUpperCase() + part.slice(1)
-      }
-    })
-    .join('')
+    // Convert to camelCase
+    const sanitized = parts
+      .map((part, index) => {
+        if (index === 0) {
+          // First part: lowercase
+          return part.charAt(0).toLowerCase() + part.slice(1)
+        } else {
+          // Subsequent parts: capitalize first letter
+          return part.charAt(0).toUpperCase() + part.slice(1)
+        }
+      })
+      .join('')
 
-  // Warn if the name was altered
-  if (sanitized !== name) {
-    console.warn(`⚠️  Group name sanitized: "${name}" → "${sanitized}"`)
-  }
+    // Warn if the name was altered
+    if (sanitized !== name) {
+      yield* Effect.logWarning(`Group name sanitized: "${name}" → "${sanitized}"`)
+    }
 
-  return sanitized
-}
+    return sanitized
+  })
 
 /**
  * Capitalize group name (handle kebab-case)
@@ -68,7 +69,7 @@ const capitalizeGroupName = (name: string): string => {
 export const generateGroups = (
   operations: ReadonlyArray<PathParser.ParsedOperation>
 ): Effect.Effect<ReadonlyArray<OperationGroup>> =>
-  Effect.sync(() => {
+  Effect.gen(function* () {
     const groupMap = new Map<string, Array<PathParser.ParsedOperation>>()
 
     for (const operation of operations) {
@@ -84,9 +85,10 @@ export const generateGroups = (
     const groups: Array<OperationGroup> = []
 
     for (const [name, ops] of groupMap.entries()) {
+      const varName = yield* sanitizeIdentifier(name)
       groups.push({
         name,
-        varName: sanitizeIdentifier(name),
+        varName,
         capitalizedName: capitalizeGroupName(name),
         operations: ops,
       })

@@ -23,7 +23,7 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
   Effect.gen(function* () {
     // Handle $ref by using the schema name
     if (schema.$ref) {
-      const schemaName = extractSchemaName(schema.$ref)
+      const schemaName = yield* extractSchemaName(schema.$ref)
       return `${schemaName}Schema`
     }
 
@@ -229,10 +229,10 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
 
         // Wrap circular references with Schema.suspend
         if (isCircular && propSchema.$ref) {
-          const schemaName = extractSchemaName(propSchema.$ref)
+          const schemaName = yield* extractSchemaName(propSchema.$ref)
           propCode = `Schema.suspend(() => ${schemaName}Schema)`
         } else if (isCircular && propSchema.type === 'array' && propSchema.items?.$ref) {
-          const schemaName = extractSchemaName(propSchema.items.$ref)
+          const schemaName = yield* extractSchemaName(propSchema.items.$ref)
           propCode = `Schema.Array(Schema.suspend(() => ${schemaName}Schema))`
         }
 
@@ -266,23 +266,24 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
  * Sanitize a string to be a valid JavaScript identifier (PascalCase for schema names)
  * Handles kebab-case, snake_case, dots, and special characters
  */
-const sanitizeIdentifier = (name: string): string => {
-  // Replace non-alphanumeric characters with spaces, then split
-  const parts = name
-    .replace(/[^a-zA-Z0-9]+/g, ' ')
-    .trim()
-    .split(/\s+/)
+const sanitizeIdentifier = (name: string): Effect.Effect<string> =>
+  Effect.gen(function* () {
+    // Replace non-alphanumeric characters with spaces, then split
+    const parts = name
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .trim()
+      .split(/\s+/)
 
-  // Convert to PascalCase
-  const sanitized = parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+    // Convert to PascalCase
+    const sanitized = parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('')
 
-  // Warn if the name was altered
-  if (sanitized !== name) {
-    console.warn(`⚠️  Schema name sanitized: "${name}" → "${sanitized}"`)
-  }
+    // Warn if the name was altered
+    if (sanitized !== name) {
+      yield* Effect.logWarning(`Schema name sanitized: "${name}" → "${sanitized}"`)
+    }
 
-  return sanitized
-}
+    return sanitized
+  })
 
 /**
  * Generate a named schema definition
@@ -296,7 +297,7 @@ export const generateNamedSchema = (
 ): Effect.Effect<string, SchemaGenerationError> =>
   Effect.gen(function* () {
     const schemaCode = yield* generateSchemaCode(schema)
-    const sanitizedName = sanitizeIdentifier(name)
+    const sanitizedName = yield* sanitizeIdentifier(name)
 
     // Generate JSDoc if schema has a description or is deprecated
     const lines: Array<string> = []
@@ -323,7 +324,7 @@ export const generateNamedSchema = (
  * e.g., "#/components/schemas/User" -> "User"
  * e.g., "#/components/schemas/schemas-Error" -> "SchemasError"
  */
-const extractSchemaName = (ref: string): string => {
+const extractSchemaName = (ref: string): Effect.Effect<string> => {
   const match = ref.match(/^#\/components\/schemas\/(.+)$/)
   const rawName = match ? match[1] : ref
   return sanitizeIdentifier(rawName)

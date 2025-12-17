@@ -1,7 +1,17 @@
 import { describe, expect, it } from '@effect/vitest'
 import * as Effect from 'effect/Effect'
+import * as Logger from 'effect/Logger'
 import * as EndpointGenerator from '../../../src/Generator/EndpointGenerator.js'
 import type * as PathParser from '../../../src/Parser/PathParser.js'
+
+/**
+ * Create a test logger that captures log messages to a mutable array
+ */
+const makeTestLogger = (logs: Array<{ level: string; message: string }>) =>
+  Logger.make(({ logLevel, message }) => {
+    const messageStr = typeof message === 'string' ? message : String(message)
+    logs.push({ level: logLevel.label, message: messageStr })
+  })
 
 describe('EndpointGenerator', () => {
   describe('generateEndpoint', () => {
@@ -415,6 +425,80 @@ describe('EndpointGenerator', () => {
         expect(result.endpointCode).toContain('.setUrlParams(')
         expect(result.endpointCode).toContain('.setPayload(')
         expect(result.endpointCode).toContain('.addSuccess(')
+      }))
+  })
+
+  describe('logging warnings', () => {
+    it.effect('should log warning for wildcard status codes', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const operation: PathParser.ParsedOperation = {
+          operationId: 'getUsers',
+          method: 'get',
+          path: '/users',
+          tags: [],
+          pathParameters: [],
+          queryParameters: [],
+          headerParameters: [],
+          cookieParameters: [],
+          responses: [
+            {
+              statusCode: '200',
+              schema: { type: 'object' },
+            },
+            {
+              statusCode: '5XX',
+              schema: { type: 'object' },
+            },
+          ],
+        }
+
+        yield* EndpointGenerator.generateEndpoint(operation).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBeGreaterThan(0)
+        expect(warnings.some((w) => w.message.includes('5XX'))).toBe(true)
+        expect(warnings.some((w) => w.message.includes('getUsers'))).toBe(true)
+      }))
+
+    it.effect('should not log warning for valid numeric status codes', () =>
+      Effect.gen(function* () {
+        const logs: Array<{ level: string; message: string }> = []
+        const testLogger = makeTestLogger(logs)
+
+        const operation: PathParser.ParsedOperation = {
+          operationId: 'getUsers',
+          method: 'get',
+          path: '/users',
+          tags: [],
+          pathParameters: [],
+          queryParameters: [],
+          headerParameters: [],
+          cookieParameters: [],
+          responses: [
+            {
+              statusCode: '200',
+              schema: { type: 'object' },
+            },
+            {
+              statusCode: '404',
+              schema: { type: 'object' },
+            },
+          ],
+        }
+
+        yield* EndpointGenerator.generateEndpoint(operation).pipe(
+          Effect.provide(Logger.replace(Logger.defaultLogger, testLogger))
+        )
+
+        const warnings = logs.filter((l) => l.level === 'WARN')
+
+        expect(warnings.length).toBe(0)
       }))
   })
 })

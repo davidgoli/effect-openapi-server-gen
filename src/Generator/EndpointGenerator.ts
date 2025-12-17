@@ -154,8 +154,8 @@ export const generateEndpoint = (
 
       // Skip wildcard status codes (e.g., '5XX', '4XX') - these are invalid in OpenAPI 3.1
       if (!/^\d+$/.test(statusCode)) {
-        console.warn(
-          `⚠️  Skipping wildcard status code '${statusCode}' for operation '${operation.operationId}' - wildcard status codes are not supported`
+        yield* Effect.logWarning(
+          `Skipping wildcard status code '${statusCode}' for operation '${operation.operationId}' - wildcard status codes are not supported`
         )
         continue
       }

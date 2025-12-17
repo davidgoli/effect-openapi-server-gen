@@ -2,12 +2,14 @@
 /**
  * @since 1.0.0
  */
+import { FileSystem, Path } from '@effect/platform'
+import type { PlatformError } from '@effect/platform/Error'
 import * as Effect from 'effect/Effect'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
 import * as ApiGenerator from '../Generator/ApiGenerator.js'
 import * as CodeEmitter from '../Generator/CodeEmitter.js'
+import type * as SchemaGenerator from '../Generator/SchemaGenerator.js'
 import * as OpenApiParser from '../Parser/OpenApiParser.js'
+import type * as SecurityParser from '../Parser/SecurityParser.js'
 
 /**
  * Generate API code from OpenAPI spec file
@@ -15,26 +17,38 @@ import * as OpenApiParser from '../Parser/OpenApiParser.js'
  * @since 1.0.0
  * @category CLI
  */
-export const generate = (specPath: string, outputPath: string): Effect.Effect<void> =>
+type GenerationError =
+  | OpenApiParser.ParseError
+  | SchemaGenerator.SchemaGenerationError
+  | SecurityParser.SecurityParseError
+  | PlatformError
+
+export const generate = (
+  specPath: string,
+  outputPath: string
+): Effect.Effect<void, GenerationError, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem
+    const path = yield* Path.Path
+
     // Resolve paths
     const resolvedSpecPath = path.resolve(specPath)
     const resolvedOutputPath = path.resolve(outputPath)
 
-    console.log(`📄 Reading OpenAPI spec from: ${resolvedSpecPath}`)
+    yield* Effect.logInfo(`Reading OpenAPI spec from: ${resolvedSpecPath}`)
 
     // Read the spec file
-    const specContent = fs.readFileSync(resolvedSpecPath, 'utf-8')
+    const specContent = yield* fs.readFileString(resolvedSpecPath)
 
-    console.log('🔍 Parsing OpenAPI specification...')
+    yield* Effect.logInfo('Parsing OpenAPI specification...')
 
     // Parse the spec
     const spec = yield* OpenApiParser.parse(specContent)
 
-    console.log(`✅ Parsed: ${spec.info.title} v${spec.info.version}`)
-    console.log(`   Paths: ${Object.keys(spec.paths).length}`)
+    yield* Effect.logInfo(`Parsed: ${spec.info.title} v${spec.info.version}`)
+    yield* Effect.logInfo(`Paths: ${Object.keys(spec.paths).length}`)
 
-    console.log('🔧 Generating Effect HttpServer code...')
+    yield* Effect.logInfo('Generating Effect HttpServer code...')
 
     // Generate the API code
     const apiCode = yield* ApiGenerator.generateApi(spec)
@@ -42,20 +56,13 @@ export const generate = (specPath: string, outputPath: string): Effect.Effect<vo
     // Emit the final code
     const finalCode = yield* CodeEmitter.emit(apiCode)
 
-    console.log(`💾 Writing generated code to: ${resolvedOutputPath}`)
+    yield* Effect.logInfo(`Writing generated code to: ${resolvedOutputPath}`)
 
     // Write the output file
-    fs.writeFileSync(resolvedOutputPath, finalCode, 'utf-8')
+    yield* fs.writeFileString(resolvedOutputPath, finalCode)
 
-    console.log('✨ Generation complete!')
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.sync(() => {
-        console.error('❌ Error:', error)
-        process.exit(1)
-      })
-    )
-  )
+    yield* Effect.logInfo('Generation complete!')
+  })
 
 /**
  * Main CLI program
@@ -63,26 +70,41 @@ export const generate = (specPath: string, outputPath: string): Effect.Effect<vo
  * @since 1.0.0
  * @category CLI
  */
-export const main = (args: ReadonlyArray<string>): Effect.Effect<void> => {
-  if (args.length < 2) {
-    return Effect.sync(() => {
-      console.log('Usage: openapi-gen <spec-file> <output-file>')
-      console.log('')
-      console.log('Example:')
-      console.log('  openapi-gen ./api-spec.yaml ./generated/api.ts')
-      process.exit(1)
-    })
-  }
+export const main = (
+  args: ReadonlyArray<string>
+): Effect.Effect<void, GenerationError, FileSystem.FileSystem | Path.Path> =>
+  Effect.gen(function* () {
+    if (args.length < 2) {
+      yield* Effect.logInfo('Usage: openapi-gen <spec-file> <output-file>')
+      yield* Effect.logInfo('')
+      yield* Effect.logInfo('Example:')
+      yield* Effect.logInfo('  openapi-gen ./api-spec.yaml ./generated/api.ts')
+      return yield* Effect.fail(new OpenApiParser.ParseError({ message: 'Missing required arguments' }))
+    }
 
-  const [specPath, outputPath] = args
+    const [specPath, outputPath] = args
 
-  return generate(specPath, outputPath)
-}
+    yield* generate(specPath, outputPath)
+  })
 
 // Run the CLI if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-  Effect.runPromise(main(process.argv.slice(2))).catch((error) => {
-    console.error('❌ Unexpected error:', error)
-    process.exit(1)
+  // Import platform-node layers for CLI execution
+  import('@effect/platform-node').then(({ NodeFileSystem, NodePath }) => {
+    const program = main(process.argv.slice(2)).pipe(
+      Effect.provide(NodeFileSystem.layer),
+      Effect.provide(NodePath.layer),
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.logError(`Error: ${error}`)
+          process.exit(1)
+        })
+      )
+    )
+
+    Effect.runPromise(program).catch((error) => {
+      console.error('Unexpected error:', error)
+      process.exit(1)
+    })
   })
 }
