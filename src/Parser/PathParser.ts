@@ -62,6 +62,15 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
         // Extract request body
         let requestBody: ParsedOperation['requestBody'] | undefined
         if (operation.requestBody?.content) {
+          const contentTypes = Object.keys(operation.requestBody.content)
+          const hasNonJson = contentTypes.some((ct) => ct !== 'application/json')
+
+          if (hasNonJson) {
+            console.warn(
+              `⚠️  Operation '${operation.operationId}' (${method.toUpperCase()} ${path}) has non-JSON content types that will be ignored: ${contentTypes.filter((ct) => ct !== 'application/json').join(', ')}`
+            )
+          }
+
           const content = operation.requestBody.content['application/json']
           if (content?.schema) {
             requestBody = {
@@ -74,6 +83,17 @@ export const extractOperations = (spec: OpenApiParser.OpenApiSpec): Effect.Effec
         // Extract all responses with schemas
         const responses: Array<{ statusCode: string; schema: OpenApiParser.SchemaObject }> = []
         for (const [statusCode, response] of Object.entries(operation.responses)) {
+          if (response.content) {
+            const contentTypes = Object.keys(response.content)
+            const hasNonJson = contentTypes.some((ct) => ct !== 'application/json')
+
+            if (hasNonJson) {
+              console.warn(
+                `⚠️  Operation '${operation.operationId}' (${method.toUpperCase()} ${path}) response ${statusCode} has non-JSON content types that will be ignored: ${contentTypes.filter((ct) => ct !== 'application/json').join(', ')}`
+              )
+            }
+          }
+
           const content = response.content?.['application/json']
           if (content?.schema) {
             responses.push({

@@ -430,7 +430,7 @@ describe('SchemaGenerator', () => {
         expect(result).toContain('0.5')
       }))
 
-    it('should handle exclusiveMinimum', () =>
+    it('should handle exclusiveMinimum (OpenAPI 3.0 boolean style)', () =>
       Effect.gen(function* () {
         const schema: OpenApiParser.SchemaObject = {
           type: 'number',
@@ -441,6 +441,47 @@ describe('SchemaGenerator', () => {
         const result = yield* SchemaGenerator.generateSchemaCode(schema)
 
         expect(result).toContain('Schema.greaterThan')
+        expect(result).toContain('0')
+      }))
+
+    it('should handle exclusiveMinimum (OpenAPI 3.1 numeric style)', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'number',
+          exclusiveMinimum: 5,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.greaterThan')
+        expect(result).toContain('5')
+      }))
+
+    it('should handle exclusiveMaximum (OpenAPI 3.0 boolean style)', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'number',
+          maximum: 100,
+          exclusiveMaximum: true,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.lessThan')
+        expect(result).toContain('100')
+      }))
+
+    it('should handle exclusiveMaximum (OpenAPI 3.1 numeric style)', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'number',
+          exclusiveMaximum: 100,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.lessThan')
+        expect(result).toContain('100')
       }))
   })
 
@@ -535,6 +576,110 @@ describe('SchemaGenerator', () => {
 
         expect(result).toContain('Schema.Union')
         expect(result).toContain('Schema.String')
+      }))
+  })
+
+  describe('string escaping - edge cases', () => {
+    it('should properly escape single quotes in regex patterns', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          pattern: "user's name",
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should escape single quote to avoid breaking the regex string
+        expect(result).toContain('Schema.pattern')
+        // Single quote should be escaped
+        expect(result).toContain("\\'")
+        // The result should not contain unescaped single quote inside the pattern
+        expect(result).toMatch(/new RegExp\('.*\\'.*'\)/)
+      }))
+
+    it('should escape template literal syntax in descriptions', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          description: 'Price: ${amount}',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should not contain unescaped template literal
+        expect(result).toContain('\\${')
+        expect(result).not.toContain('${amount}')
+      }))
+
+    it('should escape backticks in descriptions', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          description: 'Use `code` blocks',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should escape backticks
+        expect(result).toContain('\\`')
+        expect(result).not.toMatch(/[^\\]`/)
+      }))
+
+    it('should handle backslashes in patterns', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          pattern: '\\d+',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should properly escape backslashes for regex
+        expect(result).toContain('\\\\d')
+      }))
+
+    it('should handle complex regex with multiple escape scenarios', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          pattern: "user's \\w+ name",
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should escape both single quote and backslash
+        expect(result).toContain('Schema.pattern')
+        // Should contain escaped single quote
+        expect(result).toContain("\\'")
+        // Should contain escaped backslash for the \w
+        expect(result).toContain('\\\\w')
+      }))
+
+    it('should handle double quotes in descriptions', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          description: 'He said "hello"',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Single-quoted string should not need double quote escaping
+        expect(result).toContain('He said "hello"')
+      }))
+
+    it('should handle newlines and tabs in descriptions', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'string',
+          description: 'Line 1\nLine 2\tTabbed',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should escape newlines and tabs
+        expect(result).toContain('\\n')
+        expect(result).toContain('\\t')
       }))
   })
 })

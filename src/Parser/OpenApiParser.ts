@@ -298,8 +298,10 @@ export const parse = (content: string): Effect.Effect<OpenApiSpec, ParseError> =
       return yield* new ParseError({ message: 'Missing or invalid required field: paths' })
     }
 
-    // Validate operationId for all operations
+    // Validate operationId for all operations and check for duplicates
     const paths = obj.paths as Record<string, unknown>
+    const operationIds = new Set<string>()
+
     for (const [path, pathItem] of Object.entries(paths)) {
       if (typeof pathItem !== 'object' || pathItem === null) {
         continue
@@ -317,6 +319,15 @@ export const parse = (content: string): Effect.Effect<OpenApiSpec, ParseError> =
               message: `Missing required field operationId for operation: ${method.toUpperCase()} ${path}`,
             })
           }
+
+          // Check for duplicate operationId
+          if (operationIds.has(op.operationId)) {
+            return yield* new ParseError({
+              message: `Duplicate operationId '${op.operationId}' found. Each operation must have a unique operationId.`,
+            })
+          }
+
+          operationIds.add(op.operationId)
         }
       }
     }

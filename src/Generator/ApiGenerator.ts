@@ -236,7 +236,16 @@ export const generateApi = (
     }
 
     // Generate API name from title (remove spaces, keep alphanumeric)
-    const apiName = spec.info.title.replace(/[^a-zA-Z0-9]/g, '')
+    let apiName = spec.info.title.replace(/[^a-zA-Z0-9]/g, '')
+
+    // Handle edge cases for invalid JavaScript identifiers
+    if (apiName.length === 0) {
+      // If empty after sanitization, use default name
+      apiName = 'GeneratedApi'
+    } else if (/^\d/.test(apiName)) {
+      // If starts with digit, prefix with 'Api'
+      apiName = 'Api' + apiName
+    }
 
     // Generate the top-level API (exported)
     let apiCode = `export const ${apiName} = HttpApi.make('${apiName}')`

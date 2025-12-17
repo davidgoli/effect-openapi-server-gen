@@ -162,5 +162,81 @@ paths: {}
         expect(result.message).toContain('/users')
         expect(result.message).toContain('get')
       }))
+
+    it('should fail if operationIds are duplicated across different operations', () =>
+      Effect.gen(function* () {
+        const spec = {
+          openapi: '3.1.0',
+          info: {
+            title: 'Test API',
+            version: '1.0.0',
+          },
+          paths: {
+            '/users': {
+              get: {
+                operationId: 'getItems',
+                responses: {
+                  '200': {
+                    description: 'Success',
+                  },
+                },
+              },
+            },
+            '/posts': {
+              get: {
+                operationId: 'getItems',
+                responses: {
+                  '200': {
+                    description: 'Success',
+                  },
+                },
+              },
+            },
+          },
+        }
+
+        const result = yield* Effect.flip(OpenApiParser.parse(JSON.stringify(spec)))
+
+        expect(result.message).toContain('operationId')
+        expect(result.message).toContain('getItems')
+        expect(result.message).toContain('duplicate')
+      }))
+
+    it('should fail when operationId is duplicated in same path but different method', () =>
+      Effect.gen(function* () {
+        const spec = {
+          openapi: '3.1.0',
+          info: {
+            title: 'Test API',
+            version: '1.0.0',
+          },
+          paths: {
+            '/users': {
+              get: {
+                operationId: 'userOperation',
+                responses: {
+                  '200': {
+                    description: 'Success',
+                  },
+                },
+              },
+              post: {
+                operationId: 'userOperation',
+                responses: {
+                  '200': {
+                    description: 'Success',
+                  },
+                },
+              },
+            },
+          },
+        }
+
+        const result = yield* Effect.flip(OpenApiParser.parse(JSON.stringify(spec)))
+
+        expect(result.message).toContain('operationId')
+        expect(result.message).toContain('userOperation')
+        expect(result.message).toContain('duplicate')
+      }))
   })
 })

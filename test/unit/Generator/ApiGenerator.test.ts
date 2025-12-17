@@ -129,5 +129,80 @@ describe('ApiGenerator', () => {
         // Description should be included as a comment
         expect(code).toContain('This is a test API')
       }))
+
+    it('should handle title starting with numbers by prefixing with Api', () =>
+      Effect.gen(function* () {
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: {
+            title: '123 Banking API',
+            version: '1.0.0',
+          },
+          paths: {
+            '/test': {
+              get: {
+                operationId: 'test',
+                responses: { '200': { description: 'Success' } },
+              },
+            },
+          },
+        }
+
+        const code = yield* ApiGenerator.generateApi(spec)
+
+        // Should add 'Api' prefix when starting with digit
+        expect(code).toContain('HttpApi.make("Api123BankingAPI")')
+        expect(code).toContain('const Api123BankingAPI =')
+      }))
+
+    it('should handle title with only special characters by using default name', () =>
+      Effect.gen(function* () {
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: {
+            title: '!@#$%',
+            version: '1.0.0',
+          },
+          paths: {
+            '/test': {
+              get: {
+                operationId: 'test',
+                responses: { '200': { description: 'Success' } },
+              },
+            },
+          },
+        }
+
+        const code = yield* ApiGenerator.generateApi(spec)
+
+        // Should use default name when title is empty after sanitization
+        expect(code).toContain('HttpApi.make("GeneratedApi")')
+        expect(code).toContain('const GeneratedApi =')
+      }))
+
+    it('should handle title with special characters', () =>
+      Effect.gen(function* () {
+        const spec: OpenApiParser.OpenApiSpec = {
+          openapi: '3.1.0',
+          info: {
+            title: 'My-Cool_API.v2',
+            version: '1.0.0',
+          },
+          paths: {
+            '/test': {
+              get: {
+                operationId: 'test',
+                responses: { '200': { description: 'Success' } },
+              },
+            },
+          },
+        }
+
+        const code = yield* ApiGenerator.generateApi(spec)
+
+        // Should remove special characters
+        expect(code).toContain('HttpApi.make("MyCoolAPIv2")')
+        expect(code).toContain('const MyCoolAPIv2 =')
+      }))
   })
 })

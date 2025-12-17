@@ -136,7 +136,8 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
         filters.push(`Schema.maxLength(${schema.maxLength})`)
       }
       if (schema.pattern !== undefined) {
-        const escapedPattern = schema.pattern.replace(/\\/g, '\\\\')
+        // Escape backslashes first, then escape single quotes
+        const escapedPattern = schema.pattern.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
         filters.push(`Schema.pattern(new RegExp('${escapedPattern}'))`)
       }
 
@@ -153,7 +154,14 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
       // Apply validation filters
       const filters: Array<string> = []
 
-      if (schema.minimum !== undefined) {
+      // Handle minimum/exclusiveMinimum
+      // OpenAPI 3.0: minimum + exclusiveMinimum: true
+      // OpenAPI 3.1: exclusiveMinimum: <number>
+      if (typeof schema.exclusiveMinimum === 'number') {
+        // OpenAPI 3.1 style - exclusiveMinimum is the numeric value
+        filters.push(`Schema.greaterThan(${schema.exclusiveMinimum})`)
+      } else if (schema.minimum !== undefined) {
+        // OpenAPI 3.0 style - minimum with optional boolean exclusiveMinimum
         if (schema.exclusiveMinimum === true) {
           filters.push(`Schema.greaterThan(${schema.minimum})`)
         } else {
@@ -161,7 +169,14 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
         }
       }
 
-      if (schema.maximum !== undefined) {
+      // Handle maximum/exclusiveMaximum
+      // OpenAPI 3.0: maximum + exclusiveMaximum: true
+      // OpenAPI 3.1: exclusiveMaximum: <number>
+      if (typeof schema.exclusiveMaximum === 'number') {
+        // OpenAPI 3.1 style - exclusiveMaximum is the numeric value
+        filters.push(`Schema.lessThan(${schema.exclusiveMaximum})`)
+      } else if (schema.maximum !== undefined) {
+        // OpenAPI 3.0 style - maximum with optional boolean exclusiveMaximum
         if (schema.exclusiveMaximum === true) {
           filters.push(`Schema.lessThan(${schema.maximum})`)
         } else {
@@ -336,7 +351,10 @@ export const generateQueryParamSchemaCode = (
         // Apply validation filters
         const filters: Array<string> = []
 
-        if (schema.minimum !== undefined) {
+        // Handle minimum/exclusiveMinimum (same logic as generateSchemaCode)
+        if (typeof schema.exclusiveMinimum === 'number') {
+          filters.push(`Schema.greaterThan(${schema.exclusiveMinimum})`)
+        } else if (schema.minimum !== undefined) {
           if (schema.exclusiveMinimum === true) {
             filters.push(`Schema.greaterThan(${schema.minimum})`)
           } else {
@@ -344,7 +362,10 @@ export const generateQueryParamSchemaCode = (
           }
         }
 
-        if (schema.maximum !== undefined) {
+        // Handle maximum/exclusiveMaximum (same logic as generateSchemaCode)
+        if (typeof schema.exclusiveMaximum === 'number') {
+          filters.push(`Schema.lessThan(${schema.exclusiveMaximum})`)
+        } else if (schema.maximum !== undefined) {
           if (schema.exclusiveMaximum === true) {
             filters.push(`Schema.lessThan(${schema.maximum})`)
           } else {
@@ -379,10 +400,12 @@ export const generateQueryParamSchemaCode = (
  */
 const addAnnotations = (code: string, schema: OpenApiParser.SchemaObject): string => {
   if (schema.description) {
-    // Escape special characters for JSON string
+    // Escape special characters for single-quoted string
     const escapedDescription = schema.description
-      .replace(/\\/g, '\\\\') // Escape backslashes
+      .replace(/\\/g, '\\\\') // Escape backslashes first
       .replace(/'/g, "\\'") // Escape single quotes
+      .replace(/`/g, '\\`') // Escape backticks
+      .replace(/\$/g, '\\$') // Escape dollar signs (for template literals)
       .replace(/\n/g, '\\n') // Escape newlines
       .replace(/\r/g, '\\r') // Escape carriage returns
       .replace(/\t/g, '\\t') // Escape tabs
