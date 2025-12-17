@@ -289,7 +289,27 @@ export const generateSchemaCode = (schema: OpenApiParser.SchemaObject): Effect.E
       }
 
       const itemsCode = yield* generateSchemaCode(schema.items)
-      return addAnnotations(`Schema.Array(${itemsCode})`, schema)
+      let code = `Schema.Array(${itemsCode})`
+
+      // Apply array validation filters
+      const filters: Array<string> = []
+
+      if (schema.minItems !== undefined) {
+        filters.push(`Schema.minItems(${schema.minItems})`)
+      }
+      if (schema.maxItems !== undefined) {
+        filters.push(`Schema.maxItems(${schema.maxItems})`)
+      }
+      if (schema.uniqueItems === true) {
+        // Custom filter to ensure all items are unique using Set comparison
+        filters.push(`Schema.filter((items) => new Set(items).size === items.length, { message: () => 'Array items must be unique' })`)
+      }
+
+      if (filters.length > 0) {
+        code = `${code}.pipe(${filters.join(', ')})`
+      }
+
+      return addAnnotations(code, schema)
     }
 
     // Handle object type

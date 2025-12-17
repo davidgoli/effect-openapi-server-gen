@@ -143,6 +143,10 @@ export interface SchemaObject {
   readonly multipleOf?: number
   readonly exclusiveMinimum?: boolean | number
   readonly exclusiveMaximum?: boolean | number
+  // Array validation
+  readonly minItems?: number
+  readonly maxItems?: number
+  readonly uniqueItems?: boolean
   // Schema combinators
   readonly allOf?: ReadonlyArray<SchemaObject>
   readonly oneOf?: ReadonlyArray<SchemaObject>

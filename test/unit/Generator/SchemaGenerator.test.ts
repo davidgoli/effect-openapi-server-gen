@@ -505,6 +505,97 @@ describe('SchemaGenerator', () => {
       }))
   })
 
+  describe('array validation - Phase 6', () => {
+    it.effect('should generate minItems constraint', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.Array(Schema.String).pipe(Schema.minItems(1))')
+      }))
+
+    it.effect('should generate maxItems constraint', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'array',
+          items: { type: 'number' },
+          maxItems: 10,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.Array(Schema.Number).pipe(Schema.maxItems(10))')
+      }))
+
+    it.effect('should combine minItems and maxItems', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+          maxItems: 5,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toBe('Schema.Array(Schema.String).pipe(Schema.minItems(1), Schema.maxItems(5))')
+      }))
+
+    it.effect('should handle uniqueItems constraint', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'array',
+          items: { type: 'string' },
+          uniqueItems: true,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        // Should filter to ensure all items are unique
+        expect(result).toContain('Schema.Array(Schema.String)')
+        expect(result).toContain('Schema.filter')
+      }))
+
+    it.effect('should combine all array constraints', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'array',
+          items: { type: 'integer' },
+          minItems: 2,
+          maxItems: 10,
+          uniqueItems: true,
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.Array(Schema.Int)')
+        expect(result).toContain('Schema.minItems(2)')
+        expect(result).toContain('Schema.maxItems(10)')
+        expect(result).toContain('Schema.filter')
+      }))
+
+    it.effect('should add description annotation to constrained arrays', () =>
+      Effect.gen(function* () {
+        const schema: OpenApiParser.SchemaObject = {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+          description: 'A non-empty list of tags',
+        }
+
+        const result = yield* SchemaGenerator.generateSchemaCode(schema)
+
+        expect(result).toContain('Schema.minItems(1)')
+        expect(result).toContain('.annotations')
+        expect(result).toContain('A non-empty list of tags')
+      }))
+  })
+
   describe('number validation - Phase 3', () => {
     it('should handle minimum constraint', () =>
       Effect.gen(function* () {
