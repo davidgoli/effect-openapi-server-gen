@@ -1,13 +1,31 @@
 {
   "name": "@davidgoli/openapi-server-gen",
+  "author": "David Golightly",
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@9.15.0",
   "license": "MIT",
   "description": "Generate type-safe Effect HttpServer implementations from OpenAPI 3.1 specifications",
+  "keywords": [
+    "openapi",
+    "effect",
+    "effect-ts",
+    "codegen",
+    "code-generator",
+    "typescript",
+    "http-server",
+    "api",
+    "rest",
+    "schema",
+    "type-safe"
+  ],
+  "homepage": "https://github.com/davidgoli/effect-openapi-server-gen#readme",
   "repository": {
     "type": "git",
-    "url": "<PLACEHOLDER>"
+    "url": "git+https://github.com/davidgoli/effect-openapi-server-gen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/davidgoli/effect-openapi-server-gen/issues"
   },
   "bin": {
     "openapi-server-gen": "./dist/esm/CLI/Program.js"
